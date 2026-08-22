@@ -10,6 +10,35 @@
 //! ```
 //!
 //! It never opens a window and never touches the operator's config.
+//!
+//! # Reading the output at true scale
+//!
+//! Each sheet is a **3 x size** canvas with her drawn at `size` around the
+//! anchor `(1.5 * size, 1.9 * size)`, so there is room either side to see a
+//! pose throw her about. That means rendering `size-256.svg` at 96 px does
+//! *not* show you what she looks like at 96 px — it shows you a 32 px version
+//! of her, which is a different and much more forgiving question.
+//!
+//! To review at true scale, render the sheet at `3 * size` and crop her
+//! 256-unit box out of it first. The box lands at
+//!
+//! ```text
+//! x = [size, 2 * size]                y = [1.009375 * size, 2.009375 * size]
+//! ```
+//!
+//! because the skin's anchor is (128, 228) of 256 and 228/256 = 0.890625.
+//! With `rsvg-convert` and ImageMagick:
+//!
+//! ```text
+//! rsvg-convert -w 768 -h 768 size-256.svg -o full.png
+//! magick full.png -crop 256x256+256+258 +repage -resize 96x96 true96.png
+//! ```
+//!
+//! Poses displace her out of that box, so pad the crop by ~40 px for
+//! `moving-*` and `falling`. Strip the `<rect width="100%">` backdrop and the
+//! dashed contour `<polygon>` from the SVG first if you want her on alpha —
+//! which you need for the silhouette check, and the silhouette check is the
+//! one that matters.
 
 use std::fmt::Write as _;
 

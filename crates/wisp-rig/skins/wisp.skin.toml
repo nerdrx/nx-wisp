@@ -1,9 +1,9 @@
-# Wisp — the default NX Wisp skin (F73, revised for the chibi brief)
+# Wisp — the default NX Wisp skin (F73, chibi brief, hair-and-outfit revision)
 #
-# A small round companion: an enormous head, a stubby violet body, cyan hair
-# and twin trailing tails. She is meant to be *cute*, and she is meant to be
-# read at 96 pixels — which is roughly the size of a browser favicon and the
-# size she actually sits on a desktop.
+# A small round companion: an enormous head, a stubby body, long teal twintails
+# and a school-uniform silhouette. She is meant to be *cute*, and she is meant
+# to be read at 96 pixels — which is roughly the size of a browser favicon and
+# the size she actually sits on a desktop.
 #
 # Everything here is data. There is no expression language in this format and
 # no way for a skin to run code (SPEC.md §3.6).
@@ -17,29 +17,74 @@
 # total height. This file is built to that number and nothing else was allowed
 # to push it around:
 #
-#     hair crown   y =  12   ─┐
-#     face top     y =  24    │ head mass = 130 units
+#     hair crown   y =   8   ─┐
+#     face top     y =  24    │ head mass, crown to chin = 134 units
 #     chin         y = 142   ─┘
-#     dress hem    y = 204    │ body + legs = 86 units
+#     lock tips    y = 162    │
+#     skirt hem    y = 197    │ body, legs and boots = 86 units
 #     sole         y = 228   ─┘
-#                             total = 216 units, head = 60.2%
+#                             total = 220 units, head = 60.9%
 #
-# Her face is 128 units wide (140 with the hair) against an 80-unit body, so
-# she is a sphere on a stub. The whole figure fills 216 of the canvas's 256
-# units, which is deliberate: at 96 px on screen that makes her 81 px tall
-# instead of the 49 px the previous faceted design managed. Half the
+# Her face is 128 units wide (140 with the hair) against a 62-unit torso, so
+# she is a sphere on a stub. The whole figure fills 220 of the canvas's 256
+# units, which is deliberate: at 96 px on screen that makes her 82 px tall
+# instead of the 49 px the original faceted design managed. Half the
 # legibility win at 96 px is simply *occupying the canvas*.
 #
 # Eyes are 44 units wide each against a 128-unit face — 34% of face width per
 # eye, and three quarters of the face given over to two eyes. That is the
 # anime-chibi ratio, and at 96 px it makes each eye a legible 16 px object with
-# room inside it for an iris, a pupil and two catchlights.
+# room inside it for an iris, a pupil and two catchlights. The eyes are the one
+# part of her nobody is allowed to "improve": they were solved, and a bigger
+# pupil turns each eye into a hole at 96 px.
 #
-# The twin tails run from y = 40 down to y = 210, as long as she is tall, and
-# they are held ~16 units clear of her head. That clearance is not decoration:
-# without it the head and the tails silhouette as one wide blob and she reads
-# as a lop-eared animal. The gap is the difference between "twin tails" and
-# "ears", and it is worth more than any amount of gradient.
+# ----------------------------------------------------------------------------
+# Why she stopped looking like an astronaut
+# ----------------------------------------------------------------------------
+#
+# The revision before this one drew her hair as a single smooth cyan dome with
+# the pale face inset inside it. That silhouette is a space helmet with a
+# visor, and the operator said so. Two things caused it and both are fixed
+# here:
+#
+#   1. **The fringe had no edge.** Hair only reads as hair when its boundary is
+#      broken. `hair_front` is now two big swept locks meeting at a narrow
+#      parting, with six strand tips hanging off their hem — the outermost pair
+#      reaching y = 90, right down beside her eyes. That is 13 px of broken
+#      boundary at 96. A smooth arc there is a visor; a broken one is a fringe.
+#      Getting the *shape* of the break right took three tries; see the note on
+#      `hair_front`, because two of the obvious answers look worse than the
+#      helmet did.
+#   2. **The hair enclosed the face instead of framing it.** A helmet encloses.
+#      Hair frames. The fringe now covers the upper third of the face and stops
+#      — the cheeks, the mouth and the chin are bare skin — and `lock_l` /
+#      `lock_r` hang past the jaw to points at y = 162, twenty units *below*
+#      the chin, so the head's outline is broken at the bottom corners rather
+#      than closing into a circle. `hair_back` carries four spiked tips at
+#      y = 158-160 for the same reason. If the head's outline ever becomes a
+#      smooth closed curve again, the astronaut is back.
+#
+# The hair also stopped being brand cyan. `#00e5ff` at full saturation across a
+# whole dome is a painted helmet; a lighter desaturated seafoam reads as hair
+# and lets the face — now a warm skin tone rather than lavender-white — sit in
+# front of it as a separate object. Cyan survives where it belongs: in her
+# irises, in the mote inside her chest, and in the rim light.
+#
+# The twintails used to be rooted beside her jaw, which is where an animal's
+# ears are, and they hung in two even lobes, which is what an animal's ears do.
+# They are now tied at the top corners of her skull at y = 30 — above the
+# temples, at the crown — with a rectangular maroon tie at each root, and each
+# tail is five units wide under its tie, swells to 33 through the middle and
+# comes to an actual point at y = 224. Even lobes are ears; narrow-fat-point is
+# a tail.
+#
+# The old fix was a 16-unit gap held open beside the head. That gap still
+# exists and it is still doing the work, but it has moved: each tail's inner
+# edge bows outward so the notch opens 6 units under the tie, 10 by y = 80 and
+# 16 by the jaw, and the tail is 30 units clear of her arm at y = 178. Without
+# that bow the head and the two tails union into one smooth dome across the top
+# of the silhouette, and a smooth dome is the astronaut whatever is painted
+# inside it.
 #
 # ----------------------------------------------------------------------------
 # Why she is round, when docs/DESIGN.md says angular
@@ -47,10 +92,12 @@
 #
 # SPEC.md §3.5b: DESIGN.md's angular geometry rule (radii 3-6 px, no pills, no
 # round blobs) governs *chrome* — bubbles, panels, menus, the rig editor. It
-# does not govern the creature. A chibi is round by definition; the previous
+# does not govern the creature. A chibi is round by definition; an early
 # revision of this file obeyed the chrome rule literally, and the result was a
 # dark faceted crystal that read at 96 px as a smudge. Do not re-angularise
-# her. Everything else in DESIGN.md still applies:
+# her. The straight lines that do appear — the strand tips, the hair ties, the
+# pleats — are hair and cloth, not facets. Everything else in DESIGN.md still
+# applies:
 #
 #   - One light source, upper-left. Every linear gradient runs from around
 #     (74, 40) towards (182, 160); every radial puts its focus above and left
@@ -59,10 +106,33 @@
 #   - Light rides motion. `core`, `spark` and `sheen` follow the `light` bone,
 #     which the rig displaces against her travel, so the highlight slides
 #     through her instead of flashing.
-#   - Violet leads; cyan is light inside the material. Her dress and her glow
-#     are NX violet #7700ff. Her hair, her tails and her irises are cyan, and
-#     every one of them is a *gradient* — cyan is never laid down as a flat
-#     surface colour anywhere in this file.
+#   - Violet leads. Her necktie is NX violet #7700ff, her heart glows #7700ff
+#     through the jacket, and the bloom she sits in is #7700ff. The reference
+#     character wears a teal tie; violet gives the brand a home now that the
+#     hair has gone teal, and the silhouette is identical either way. Cyan is
+#     never laid down as a flat surface colour anywhere in this file.
+#
+# ----------------------------------------------------------------------------
+# The outfit
+# ----------------------------------------------------------------------------
+#
+# Half of "she looks like a spacesuit" was that she was not wearing anything —
+# a violet sack with a cyan band at the neck. She now wears the standard
+# chibi-idol uniform, sized so every piece clears the 2 px floor at 96:
+#
+#     collar                  white, 52 units across    20 px
+#     shirt, in the collar V  white, 24 units wide       9 px
+#     necktie                 #7700ff, 20 units wide      7 px
+#     sleeveless jacket       near-black violet    the torso silhouette
+#     pleated skirt           darker, 84 at the hem     31 px
+#     bare arms and thighs    skin, so the dark reads as clothing
+#     thigh boots + trim      dark with a lilac band    3.4 px of band
+#
+# The bare gap of thigh between the skirt hem (197) and the boot band (204) is
+# only seven units, but it is the difference between "boots" and "the bottom of
+# a dress". The white is rationed on purpose: a wide white panel across the
+# chest reads as an apron at 96 px, so the collar carries it and the shirt only
+# shows in the V.
 #
 # ----------------------------------------------------------------------------
 # Reading at 96 px
@@ -74,10 +144,13 @@
 # "better at 512" — never between "there" and "not there" at 96. The features
 # that must survive the shrink are, in order:
 #
-#   1. the silhouette — a big circle, two tails, a stub;
+#   1. the silhouette — a big head with a broken hair outline, two long tails
+#      tied high, a stub of a body;
 #   2. the two eyes, and the bright rim that separates her from the wallpaper;
-#   3. the cyan hair mass against the violet dress;
-#   4. brows and mouth, which is what makes eight expressions distinguishable.
+#   3. the teal hair against the warm face and the near-black uniform;
+#   4. the violet tie, which is the brand and the only warm-cold break below
+#      her chin;
+#   5. brows and mouth, which is what makes eight expressions distinguishable.
 #
 # Canvas is 256x256 units and maps onto whatever pixel size the operator picks
 # (F75, 48-512 px), so she is sharp on a 4K display at any size.
@@ -159,6 +232,12 @@ value = "#2a1250"
 name = "pupil"
 value = "#150829"
 
+# The band across each hair tie. Grey-silver, and the only neutral in the file:
+# it is what stops the tie reading as a red smudge at 96 px.
+[[color]]
+name = "silver"
+value = "#cdc6dc"
+
 # --- gradients ---------------------------------------------------------------
 
 # The violet bloom she sits in. Not part of the silhouette — you click through
@@ -171,66 +250,159 @@ center = [128.0, 128.0]
 focus = [104.0, 100.0]
 radius = 120.0
 stop_at = [0.0, 0.44, 0.74, 1.0]
-stop_color = ["#7700ff59", "#7700ff2e", "#7700ff12", "#7700ff00"]
+stop_color = ["#7700ff4a", "#7700ff26", "#7700ff10", "#7700ff00"]
 
 # Her face. The name is historical — this is the top-lit body gradient the
-# format's tests know by name — but it now lights skin rather than glass. Pale
-# lavender, not white: violet still leads even on the brightest surface she
-# has, and a pale face is what carries the eyes at 96 px.
+# format's tests know by name — but it now lights *skin*. Warm and pale: the
+# previous lavender-white made the face read as a visor behind glass, because
+# a cold face under cold hair is one material. Skin has to be a different
+# temperature from the hair or the hair cannot sit in front of it.
 [[gradient]]
 name = "glass_body"
 kind = "linear"
 start = [74.0, 40.0]
 end = [182.0, 160.0]
 stop_at = [0.0, 0.52, 1.0]
-stop_color = ["#fdf8ff", "#e9daff", "#b892e4"]
+stop_color = ["#fff5ed", "#ffe4d6", "#efc2ad"]
 
-# Her hair and tails. Cyan, but a *material* cyan — lit at the crown, brand
-# cyan through the middle, and deep teal in shadow, so the mass has form
-# instead of reading as a flat swatch.
+# Her arms and thighs. Same skin, lit for where they actually are — a gradient
+# lives in canvas space, so a limb down at y = 200 needs its own ramp or it
+# takes the face's shadow end and goes muddy.
+[[gradient]]
+name = "skin_limb"
+kind = "linear"
+start = [86.0, 140.0]
+end = [176.0, 216.0]
+stop_at = [0.0, 0.5, 1.0]
+stop_color = ["#fff1e8", "#ffdece", "#e9b9a3"]
+
+# Her hair and the twintails. A *desaturated seafoam*, not brand cyan: cyan at
+# full chroma across a whole head is a painted helmet, and it flattens into one
+# opaque shape at 96 px. Lit at the crown, seafoam through the middle and deep
+# teal in shadow, so the mass has form.
 [[gradient]]
 name = "hair"
 kind = "linear"
 start = [62.0, 6.0]
 end = [206.0, 164.0]
 stop_at = [0.0, 0.3, 0.68, 1.0]
-stop_color = ["#86f2ff", "#21ddff", "#00abd4", "#0a6f96"]
+stop_color = ["#a4e7da", "#71cfc2", "#449991", "#28636a"]
 
-# The dress. NX violet, lit from the same corner.
+# The shine that runs down the outside of each tail and across the fringe.
 [[gradient]]
-name = "dress_lit"
+name = "hair_lit"
 kind = "linear"
-start = [70.0, 132.0]
-end = [190.0, 196.0]
-stop_at = [0.0, 0.45, 1.0]
-stop_color = ["#c98cff", "#9a3cff", "#6408d0"]
+start = [40.0, 20.0]
+end = [232.0, 200.0]
+stop_at = [0.0, 0.5, 1.0]
+stop_color = ["#f0fffc", "#b6f0e4", "#84d8cd"]
 
+# The tails. Same material as the hair, running out along their length and
+# darkening as they leave her, so the pair have depth against the head.
+[[gradient]]
+name = "tail_glow"
+kind = "linear"
+start = [40.0, 8.0]
+end = [252.0, 196.0]
+stop_at = [0.0, 0.3, 0.66, 1.0]
+stop_color = ["#95dccf", "#5cb9ae", "#358a88", "#1f545d"]
+
+# The shadow down the inner edge of each tail, where it turns away from the
+# light and towards her head. Ten units of it, which is 3.7 px — enough to give
+# the tail a near side and a far side instead of reading as a flat cut-out.
+[[gradient]]
+name = "tail_shade"
+kind = "linear"
+start = [40.0, 40.0]
+end = [232.0, 220.0]
+stop_at = [0.0, 0.5, 1.0]
+stop_color = ["#1b5460", "#256a75", "#2f7f88"]
+
+# The sleeveless jacket. Near-black, but a *violet* near-black — nothing in
+# this file is neutral except the tie band.
+[[gradient]]
+name = "jacket"
+kind = "linear"
+start = [96.0, 132.0]
+end = [164.0, 196.0]
+stop_at = [0.0, 0.45, 1.0]
+stop_color = ["#544678", "#2e2549", "#170f28"]
+
+# The skirt, and the boots. One step darker than the jacket so the two read as
+# separate garments at 96 px rather than as one dark mass.
+[[gradient]]
+name = "skirt"
+kind = "linear"
+start = [84.0, 168.0]
+end = [174.0, 208.0]
+stop_at = [0.0, 0.45, 1.0]
+stop_color = ["#5b4d82", "#352a53", "#1d1433"]
+
+[[gradient]]
+name = "boot"
+kind = "linear"
+start = [98.0, 198.0]
+end = [158.0, 228.0]
+stop_at = [0.0, 0.45, 1.0]
+stop_color = ["#3d3159", "#221a39", "#110c1f"]
+
+# The band round the top of each boot, and the same lilac used for the pleats.
+[[gradient]]
+name = "trim"
+kind = "linear"
+start = [98.0, 196.0]
+end = [158.0, 214.0]
+stop_at = [0.0, 1.0]
+stop_color = ["#c3b8e4", "#8879bb"]
+
+# The shirt under the jacket, and the collar.
+[[gradient]]
+name = "shirt"
+kind = "linear"
+start = [104.0, 142.0]
+end = [154.0, 190.0]
+stop_at = [0.0, 0.5, 1.0]
+stop_color = ["#ffffff", "#f1ecfc", "#cfc4ea"]
+
+# The necktie. NX violet, lit from the same corner as everything else. This is
+# where the brand lives now that the hair is teal.
 [[gradient]]
 name = "dress"
 kind = "linear"
-start = [92.0, 120.0]
-end = [172.0, 206.0]
+start = [116.0, 150.0]
+end = [140.0, 202.0]
 stop_at = [0.0, 0.42, 1.0]
-stop_color = ["#a855ff", "#7700ff", "#40068c"]
+stop_color = ["#b478ff", "#7700ff", "#42088f"]
 
-# The violet heart, glowing out through the dress. Follows the light bone.
+# The hair ties. Dark maroon, the single most iconic cue the reference
+# character has, and the reason two teal shapes beside her head read as
+# *twintails* rather than as ears.
+[[gradient]]
+name = "hairtie"
+kind = "linear"
+start = [60.0, 20.0]
+end = [200.0, 56.0]
+stop_at = [0.0, 0.5, 1.0]
+stop_color = ["#a83b52", "#7c2437", "#4e1526"]
+
+# The violet heart, glowing out through the jacket. Follows the light bone.
 [[gradient]]
 name = "core"
 kind = "radial"
-center = [128.0, 170.0]
-focus = [112.0, 154.0]
-radius = 40.0
+center = [128.0, 166.0]
+focus = [112.0, 150.0]
+radius = 38.0
 follow_bone = "light"
 stop_at = [0.0, 0.34, 0.72, 1.0]
-stop_color = ["#c187ffb0", "#7700ff8c", "#7700ff33", "#7700ff00"]
+stop_color = ["#c187ff8c", "#7700ff66", "#7700ff26", "#7700ff00"]
 
 # The cyan mote — the light that moves *inside* her. Small, hot, and never a
 # surface colour.
 [[gradient]]
 name = "spark"
 kind = "radial"
-center = [114.0, 172.0]
-focus = [106.0, 164.0]
+center = [114.0, 166.0]
+focus = [106.0, 158.0]
 radius = 15.0
 follow_bone = "light"
 stop_at = [0.0, 0.32, 0.68, 1.0]
@@ -247,27 +419,28 @@ end = [180.0, 96.0]
 stop_at = [0.0, 0.5, 1.0]
 stop_color = ["#ffffff4d", "#ffffff1a", "#ffffff00"]
 
-# ...and the shadow the hair and the chin cast downwards. Same light, other
-# side. This is what stops the face reading as a flat disc.
+# ...and the shadow the fringe and the chin cast downwards. Same light, other
+# side. This is what stops the face reading as a flat disc, and it is warm now
+# because it falls on skin.
 [[gradient]]
 name = "facet_shadow"
 kind = "linear"
-start = [128.0, 96.0]
-end = [128.0, 152.0]
+start = [128.0, 84.0]
+end = [128.0, 150.0]
 stop_at = [0.0, 0.55, 1.0]
-stop_color = ["#2c0d5500", "#2c0d5514", "#2c0d5540"]
+stop_color = ["#6b2f4a00", "#6b2f4a12", "#6b2f4a3a"]
 
-# DESIGN.md's --edge-lit: bright top-left, violet, a breath of cyan, then dark.
-# On a chibi this does more work than on anything else in the product — it is
-# the whole reason she survives being dropped on a white window or a photo
-# wallpaper.
+# DESIGN.md's --edge-lit: bright top-left, warm, a breath of seafoam, then
+# dark. On a chibi this does more work than on anything else in the product —
+# it is the whole reason she survives being dropped on a white window or a
+# photo wallpaper.
 [[gradient]]
 name = "edge_lit"
 kind = "linear"
 start = [66.0, 16.0]
 end = [196.0, 200.0]
 stop_at = [0.0, 0.32, 0.62, 1.0]
-stop_color = ["#ffffffff", "#e6d6ffcc", "#8be9ffa8", "#2a0a4a8c"]
+stop_color = ["#ffffffff", "#ffeadccc", "#9ceee0a8", "#2a0a4a8c"]
 
 # The specular band on the crown. Bound to the light bone, so it is a function
 # of where she is going — not a sweep fired on an event.
@@ -278,22 +451,14 @@ start = [76.0, 14.0]
 end = [166.0, 92.0]
 follow_bone = "light"
 stop_at = [0.0, 0.4, 0.62, 1.0]
-stop_color = ["#ffffff00", "#ffffff5c", "#d6f6ff2e", "#ffffff00"]
-
-# The tails. Same cyan material as the hair, running out along their length and
-# fading as they leave her, so the trail dissolves rather than stopping.
-[[gradient]]
-name = "tail_glow"
-kind = "linear"
-start = [40.0, 8.0]
-end = [252.0, 196.0]
-stop_at = [0.0, 0.3, 0.66, 1.0]
-stop_color = ["#5fe6fb", "#12c9ee", "#0097bd", "#075c7e"]
+stop_color = ["#ffffff00", "#ffffff52", "#d6fff62e", "#ffffff00"]
 
 # The irises. One gradient per eye, because a gradient lives in canvas space
 # and a single shared one would light the two eyes differently. Hot white-cyan
 # at the top-left, brand cyan through the middle, deep blue at the bottom —
-# that vertical ramp is what makes a flat disc read as a glassy sphere.
+# that vertical ramp is what makes a flat disc read as a glassy sphere. This is
+# where NX cyan lives now, and it is the reason the eyes are the first thing
+# you see at 96 px.
 [[gradient]]
 name = "iris_l"
 kind = "radial"
@@ -312,25 +477,26 @@ radius = 22.0
 stop_at = [0.0, 0.5, 0.86, 1.0]
 stop_color = ["#eafeff", "#35ecff", "#0aa8e2", "#0d6cc0"]
 
-# Blush. Warm pink against everything else in the palette being cold, which is
-# exactly why it reads at 96 px as two soft dabs of colour on her cheeks.
+# Blush. Warm pink on warm skin, so it is a flush rather than a sticker — it
+# was two hot magenta dabs when the face was lavender, and it has to come down
+# now that the face is not.
 [[gradient]]
 name = "blush_l"
 kind = "radial"
-center = [86.0, 128.0]
-focus = [80.0, 123.0]
-radius = 17.0
+center = [84.0, 124.0]
+focus = [79.0, 119.0]
+radius = 16.0
 stop_at = [0.0, 0.55, 1.0]
-stop_color = ["#ff5fb8c4", "#ff5fb87a", "#ff5fb800"]
+stop_color = ["#ff8296b4", "#ff829670", "#ff829600"]
 
 [[gradient]]
 name = "blush_r"
 kind = "radial"
-center = [170.0, 128.0]
-focus = [164.0, 123.0]
-radius = 17.0
+center = [172.0, 124.0]
+focus = [167.0, 119.0]
+radius = 16.0
 stop_at = [0.0, 0.55, 1.0]
-stop_color = ["#ff5fb8c4", "#ff5fb87a", "#ff5fb800"]
+stop_color = ["#ff8296b4", "#ff829670", "#ff829600"]
 
 # --- skeleton ----------------------------------------------------------------
 #
@@ -397,13 +563,13 @@ length = 22.0
 [[bone]]
 name = "brow_l"
 parent = "head"
-pos = [-27.0, -46.0]
+pos = [-27.0, -43.0]
 length = 14.0
 
 [[bone]]
 name = "brow_r"
 parent = "head"
-pos = [27.0, -46.0]
+pos = [27.0, -43.0]
 length = 14.0
 
 # The mouth is a scale channel, not a shape library: one small oval that clips
@@ -421,12 +587,22 @@ parent = "body"
 pos = [-14.0, 8.0]
 length = 10.0
 
-# The twin tails. Bones point along their own +x: the first joint leaves the
-# crown at 35 deg from horizontal so the tail swings clear of her head at once,
-# and the following joints straighten towards vertical so it falls rather than
-# sticks out. That out-then-down arc is what puts daylight between the tail and
-# her body — without it the whole figure silhouettes as one blob, which is how
-# the first three attempts at this failed.
+# The twintails. Bones point along their own +x. The roots sit at (74, 38) and
+# (178, 30) — the top corners of her skull, above the temples and just inside
+# the crown — because that is where a tie goes and because a tail that leaves
+# the head beside the jaw is an ear.
+#
+# The first joint leaves at 50 deg and is the longest of the three, which is
+# what carries the tail *clear of her cheek* before it turns down: by y = 84
+# the centreline is at x = 223 against a head that stops at 198. The two joints
+# after it straighten towards vertical so the tail falls rather than sticks
+# out, and the last one is long and slow so the taper has somewhere to go.
+#
+# The artwork keeps the tail *narrow* for the first fifty units below the tie
+# and puts its bulk at y = 100-150, which is the fix for the other half of the
+# blob problem: a tail that is already fat at y = 40 fuses with the crown into
+# one wide dome, and a wide smooth dome is the silhouette of a helmet no matter
+# what is painted on it.
 #
 # Naming: the unsuffixed chain — `tail1..3`, shapes `tail_a/b/c`, chain "tail"
 # — is the tail on **screen right**; `tail_l*` mirrors it on the left. The two
@@ -437,47 +613,48 @@ length = 10.0
 [[bone]]
 name = "tail_l1"
 parent = "head"
-pos = [-52.0, -70.0]
-rot = 145.0
-length = 48.0
+pos = [-50.0, -80.0]
+rot = 130.0
+length = 70.0
 
 [[bone]]
 name = "tail_l2"
 parent = "tail_l1"
-pos = [48.0, 0.0]
+pos = [70.0, 0.0]
 rot = -35.0
-length = 46.0
+length = 56.0
 
 [[bone]]
 name = "tail_l3"
 parent = "tail_l2"
-pos = [46.0, 0.0]
-rot = -20.0
-length = 58.0
+pos = [56.0, 0.0]
+rot = -5.0
+length = 76.0
 
 [[bone]]
 name = "tail1"
 parent = "head"
-pos = [52.0, -70.0]
-rot = 35.0
-length = 48.0
+pos = [50.0, -80.0]
+rot = 50.0
+length = 70.0
 
 [[bone]]
 name = "tail2"
 parent = "tail1"
-pos = [48.0, 0.0]
+pos = [70.0, 0.0]
 rot = 35.0
-length = 46.0
+length = 56.0
 
 [[bone]]
 name = "tail3"
 parent = "tail2"
-pos = [46.0, 0.0]
-rot = 20.0
-length = 58.0
+pos = [56.0, 0.0]
+rot = 5.0
+length = 76.0
 
 # --- artwork -----------------------------------------------------------------
-# Drawn back to front by `z`.
+# Drawn back to front by `z`. The order is: bloom, tails, back hair, limbs and
+# uniform, face, eyes, front hair, ties, brows, sheen, lit edge.
 
 # The bloom. Bound to `root` rather than `body` so it stays put while she leans
 # — a small parallax that makes her read as being in front of her own glow.
@@ -485,92 +662,166 @@ length = 58.0
 name = "aura"
 z = 0
 silhouette = false
-path = "M 155.471 60.7699 C 162.189 61.7137 167.413 63.972 167.148 65.8598 C 166.882 67.7476 161.23 68.4742 154.513 67.5304 C 147.795 66.5866 142.572 64.3283 142.837 62.4405 C 143.102 60.5527 148.754 59.8261 155.471 60.7699 Z"
+path = "M 128 8 C 194 8, 248 62, 248 128 C 248 194, 194 248, 128 248 C 62 248, 8 194, 8 128 C 8 62, 62 8, 128 8 Z"
 bind = "root"
 fill = { gradient = "aura" }
 
-# --- the twin tails ----------------------------------------------------------
-# Three overlapping ribbon segments per side, each narrower than the last, so
-# the pair reads as one continuous tapering tail while still being three
-# shapes the spring chain can bend independently.
+# --- the twintails ----------------------------------------------------------
+# One outline per tail, root to point, and it is one shape rather than three
+# for a reason: every shape carries the lit edge as a stroke round its *whole*
+# boundary, so a tail split into overlapping segments draws a bright arc across
+# itself at each join. At 512 px that is a seam; at 96 px it is a bright line
+# cutting the tail in half. `tail_a` is therefore the whole tail, skinned
+# across all three joints by distance, and `_b` and `_c` are unstroked shading
+# laid inside it.
+#
+# The profile is the second half of the ear fix. An ear is even along its
+# length. A tail is *narrow at the tie* — five units at y = 40, hidden under
+# the tie itself — swells to 36 units through the middle, and comes to an
+# actual point at y = 224. Keeping it thin up top is what stops the pair fusing
+# with the crown into one wide dome, and a wide smooth dome is the silhouette
+# of a helmet no matter what is painted on it.
+#
+# The inner edge bows outward on purpose: it clears the head by 6 units at
+# y = 60, 10 at y = 80 and 16 by y = 140, so the notch opens from just under
+# the tie rather than only at the jaw. It is 30 units clear of her arm at
+# y = 178. Without that bow the head and the two tails union into a single
+# smooth dome across the top of the silhouette, which is the astronaut again.
+#
+# They are painted from `tail_glow`, which is a step darker than `hair`. Two
+# masses of identical colour either side of a head fuse into one blob at 96 px
+# no matter how much geometry sits between them; half a stop of value is what
+# actually separates them.
 #
 # The right tail is drawn first and the left over it, which gives the pair a
-# little depth ordering at no cost. Both are rooted deep inside the head, so
-# the part of the ribbon that would otherwise cut across her face is simply
-# hidden behind it — that is why the roots are at (76, 40) rather than out on
-# the head's edge where a hair tie would sit.
+# little depth ordering at no cost.
 
 [[shape]]
 name = "tail_a"
 z = 2
 silhouette = true
-path = "M 170.249 53.9256 C 181.991 62.1475 197.1 66.6573 205.902 77.9709 C 214.249 88.6993 215.368 103.456 220.017 116.23 C 224.248 127.855 254.318 116.91 250.087 105.285 C 244.248 89.2412 243.221 70.5679 232.737 57.0925 C 221.886 43.1468 204.225 36.2092 189.751 26.0744 C 178.984 18.5351 159.482 46.3863 170.249 53.9256 Z"
-bind_auto = { bones = ["tail1", "tail2"], falloff = 46.0, power = 2.0 }
+path = """
+M 180 28
+C 199 28, 217 48, 229 76
+C 239 100, 244 124, 243 156
+C 241 186, 236 206, 228 224
+C 220 204, 211 180, 209 152
+C 210 120, 210 78, 186 50
+Z"""
+bind_auto = { bones = ["tail1", "tail2", "tail3"], falloff = 70.0, power = 2.0 }
 fill = { gradient = "tail_glow" }
 stroke = { gradient = "edge_lit", width = 2.2, alpha = 0.9, join = "round" }
 
 [[shape]]
 name = "tail_b"
 z = 3
-silhouette = true
-path = "M 203.345 73.346 C 208.238 86.7903 217.045 99.0774 219.242 113.215 C 222.087 131.519 221.052 150.233 221.052 168.758 C 221.052 179.582 249.052 179.582 249.052 168.758 C 249.052 148.596 253.959 128.223 250.862 108.3 C 248.348 92.1226 240.894 77.1018 235.294 61.7173 C 230.798 49.3657 198.849 60.9943 203.345 73.346 Z"
-bind_auto = { bones = ["tail1", "tail2", "tail3"], falloff = 40.0, power = 2.0 }
-fill = { gradient = "tail_glow" }
-stroke = { gradient = "edge_lit", width = 2.0, alpha = 0.85, join = "round" }
+opacity = 0.4
+silhouette = false
+path = """
+M 186 50
+C 212 76, 219 116, 220 156
+C 221 188, 225 208, 228 224
+C 220 204, 211 180, 209 152
+C 210 120, 210 78, 186 50
+Z"""
+bind_auto = { bones = ["tail1", "tail2", "tail3"], falloff = 70.0, power = 2.0 }
+fill = { gradient = "tail_shade" }
 
 [[shape]]
 name = "tail_c"
 z = 4
-opacity = 0.82
+opacity = 0.28
 silhouette = false
-path = "M 219.052 110.758 C 219.052 130.308 220.206 149.842 221.066 169.373 C 221.71 184.024 233.931 196.361 235.464 210.946 C 235.788 214.021 243.744 213.185 243.421 210.109 C 241.945 196.073 249.659 182.242 249.039 168.142 C 248.197 149.021 251.052 129.897 251.052 110.758 C 251.052 98.3864 219.052 98.3864 219.052 110.758 Z"
-bind_auto = { bones = ["tail2", "tail3"], falloff = 34.0, power = 2.0 }
-fill = { gradient = "tail_glow" }
+path = """
+M 228 78
+C 238 102, 243 128, 242 158
+C 241 188, 236 208, 229 224
+C 231 202, 234 176, 233 150
+C 232 118, 228 96, 228 78
+Z"""
+bind_auto = { bones = ["tail2", "tail3"], falloff = 64.0, power = 2.0 }
+fill = { gradient = "hair_lit" }
 
 [[shape]]
 name = "tail_l_a"
 z = 5
 silhouette = true
-path = "M 66.2492 26.0744 C 51.7752 36.2092 34.1137 43.1468 23.2634 57.0925 C 12.779 70.5679 11.7522 89.2412 5.91269 105.285 C 1.6815 116.91 31.7517 127.855 35.9829 116.23 C 40.632 103.456 41.7508 88.6993 50.098 77.9709 C 58.9004 66.6573 74.0087 62.1475 85.7508 53.9256 C 96.518 46.3863 77.0164 18.5351 66.2492 26.0744 Z"
-bind_auto = { bones = ["tail_l1", "tail_l2"], falloff = 46.0, power = 2.0 }
+path = """
+M 76 28
+C 57 28, 39 48, 27 76
+C 17 100, 12 124, 13 156
+C 15 186, 20 206, 28 224
+C 36 204, 45 180, 47 152
+C 46 120, 46 78, 70 50
+Z"""
+bind_auto = { bones = ["tail_l1", "tail_l2", "tail_l3"], falloff = 70.0, power = 2.0 }
 fill = { gradient = "tail_glow" }
 stroke = { gradient = "edge_lit", width = 2.2, alpha = 0.9, join = "round" }
 
 [[shape]]
 name = "tail_l_b"
 z = 6
-silhouette = true
-path = "M 20.7059 61.7173 C 15.1064 77.1018 7.65199 92.1226 5.1376 108.3 C 2.0412 128.223 6.94778 148.596 6.94778 168.758 C 6.94778 179.582 34.9478 179.582 34.9478 168.758 C 34.9478 150.233 33.913 131.519 36.758 113.215 C 38.9552 99.0774 47.7621 86.7903 52.6555 73.346 C 57.1511 60.9943 25.2016 49.3657 20.7059 61.7173 Z"
-bind_auto = { bones = ["tail_l1", "tail_l2", "tail_l3"], falloff = 40.0, power = 2.0 }
-fill = { gradient = "tail_glow" }
-stroke = { gradient = "edge_lit", width = 2.0, alpha = 0.85, join = "round" }
+opacity = 0.4
+silhouette = false
+path = """
+M 70 50
+C 44 76, 37 116, 36 156
+C 35 188, 31 208, 28 224
+C 36 204, 45 180, 47 152
+C 46 120, 46 78, 70 50
+Z"""
+bind_auto = { bones = ["tail_l1", "tail_l2", "tail_l3"], falloff = 70.0, power = 2.0 }
+fill = { gradient = "tail_shade" }
 
-# The faintest wisp of the trail. Not clickable — it is barely there.
+# The shine down the far tail. Not clickable — it is a highlight, not a body.
 [[shape]]
 name = "tail_l_c"
 z = 7
-opacity = 0.82
+opacity = 0.28
 silhouette = false
-path = "M 4.94778 110.758 C 4.94778 129.897 7.80271 149.021 6.96131 168.142 C 6.34085 182.242 14.0548 196.073 12.5795 210.109 C 12.2562 213.185 20.2124 214.021 20.5357 210.946 C 22.0686 196.361 34.2896 184.024 34.9342 169.373 C 35.7937 149.842 36.9478 130.308 36.9478 110.758 C 36.9478 98.3864 4.94778 98.3864 4.94778 110.758 Z"
-bind_auto = { bones = ["tail_l2", "tail_l3"], falloff = 34.0, power = 2.0 }
-fill = { gradient = "tail_glow" }
+path = """
+M 28 78
+C 18 102, 13 128, 14 158
+C 15 188, 20 208, 27 224
+C 25 202, 22 176, 23 150
+C 24 118, 28 96, 28 78
+Z"""
+bind_auto = { bones = ["tail_l2", "tail_l3"], falloff = 64.0, power = 2.0 }
+fill = { gradient = "hair_lit" }
 
-# --- the head ----------------------------------------------------------------
+# --- the back of her head ----------------------------------------------------
 
-# The hair behind her: the same egg as the face, 12 units larger all round, so
-# a 12-unit cyan rim shows around the top and sides. Twelve units is 4.5 px at
-# 96, which is the thinnest a colour band can be and still be a colour rather
-# than an artefact.
+# The skull mass behind the face: the same egg, six units larger all round, and
+# then four spiked tips hanging past the jaw at y = 158-160. Those four points
+# are half the reason her outline is not a circle, and the lit edge traces them
+# so they are drawn rather than merely implied.
 [[shape]]
 name = "hair_back"
 z = 9
 silhouette = true
-path = "M 128 12 C 168 12, 198 42, 198 84 C 198 118, 174 148, 128 148 C 82 148, 58 118, 58 84 C 58 42, 88 12, 128 12 Z"
+path = """
+M 128 8
+C 169 8, 198 38, 198 82
+C 198 104, 197 120, 194 132
+L 202 158
+L 190 136
+L 186 160
+L 176 132
+C 168 145, 148 151, 128 151
+C 108 151, 88 145, 80 132
+L 70 160
+L 66 136
+L 54 158
+L 62 132
+C 59 120, 58 104, 58 82
+C 58 38, 87 8, 128 8
+Z"""
 bind = "head"
 fill = { gradient = "hair" }
 
 # --- the body ----------------------------------------------------------------
-# Stubby, and deliberately far too small for the head.
+# Stubby, and deliberately far too small for the head. Bare skin first, then
+# the uniform over it, because "sleeveless" only reads if there is an arm.
 
 [[shape]]
 name = "arm_l"
@@ -578,8 +829,8 @@ z = 10
 silhouette = true
 path = "M 94.9289 140.929 C 89.6547 146.203 83.3768 150.842 79.72 157.343 C 76.2526 163.507 77.7248 171.36 76.1905 178.265 C 74.8487 184.303 90.4677 187.774 91.8095 181.735 C 92.9467 176.618 93.7099 171.226 96.28 166.657 C 99.1004 161.643 105.003 159.139 109.071 155.071 C 114.538 149.604 100.396 135.462 94.9289 140.929 Z"
 bind = "body"
-fill = { gradient = "dress_lit" }
-stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.75, join = "round" }
+fill = { gradient = "skin_limb" }
+stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.7, join = "round" }
 
 [[shape]]
 name = "arm_r"
@@ -587,73 +838,224 @@ z = 10
 silhouette = true
 path = "M 146.929 155.071 C 150.997 159.139 156.9 161.643 159.72 166.657 C 162.29 171.226 163.053 176.618 164.191 181.735 C 165.532 187.774 181.151 184.303 179.809 178.265 C 178.275 171.36 179.747 163.507 176.28 157.343 C 172.623 150.842 166.345 146.203 161.071 140.929 C 155.604 135.462 141.462 149.604 146.929 155.071 Z"
 bind = "body"
-fill = { gradient = "dress_lit" }
-stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.75, join = "round" }
+fill = { gradient = "skin_limb" }
+stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.7, join = "round" }
 
+# Thighs. Seven units of them show between the skirt hem and the boot band,
+# which is 2.6 px — just over the floor, and the whole difference between thigh
+# boots and the bottom of a dress.
 [[shape]]
-name = "foot_l"
+name = "leg_l"
 z = 11
 silhouette = true
-path = "M 110 196 C 119.389 196 127 203.163 127 212 C 127 220.837 119.389 228 110 228 C 100.611 228 93 220.837 93 212 C 93 203.163 100.611 196 110 196 Z"
+path = "M 115 184 C 121 184, 124 188, 124 198 C 124 208, 121 212, 115 212 C 109 212, 106 208, 106 198 C 106 188, 109 184, 115 184 Z"
 bind = "body"
-fill = { gradient = "dress_lit" }
-stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.75, join = "round" }
+fill = { gradient = "skin_limb" }
 
 [[shape]]
-name = "foot_r"
+name = "leg_r"
 z = 11
 silhouette = true
-path = "M 146 196 C 155.389 196 163 203.163 163 212 C 163 220.837 155.389 228 146 228 C 136.611 228 129 220.837 129 212 C 129 203.163 136.611 196 146 196 Z"
+path = "M 141 184 C 147 184, 150 188, 150 198 C 150 208, 147 212, 141 212 C 135 212, 132 208, 132 198 C 132 188, 135 184, 141 184 Z"
 bind = "body"
-fill = { gradient = "dress_lit" }
-stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.75, join = "round" }
+fill = { gradient = "skin_limb" }
 
 [[shape]]
-name = "body"
+name = "boot_l"
 z = 12
 silhouette = true
 path = """
-M 128 124
-C 106 124, 96 142, 92 164
-C 88 186, 96 204, 128 204
-C 160 204, 168 186, 164 164
-C 160 142, 150 124, 128 124
+M 102 204
+C 110 201, 120 201, 128 204
+C 128 212, 128 220, 127 224
+C 124 227, 106 227, 103 224
+C 102 220, 102 212, 102 204
 Z"""
 bind = "body"
-fill = { gradient = "dress" }
-stroke = { gradient = "edge_lit", width = 2.0, alpha = 0.8, join = "round" }
+fill = { gradient = "boot" }
+stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.75, join = "round" }
 
-# The violet heart, glowing out through the dress.
 [[shape]]
-name = "core"
+name = "boot_r"
+z = 12
+silhouette = true
+path = """
+M 128 204
+C 136 201, 146 201, 154 204
+C 154 212, 154 220, 153 224
+C 150 227, 132 227, 129 224
+C 128 220, 128 212, 128 204
+Z"""
+bind = "body"
+fill = { gradient = "boot" }
+stroke = { gradient = "edge_lit", width = 1.8, alpha = 0.75, join = "round" }
+
+# The band round the top of each boot. Nine units — 3.4 px — and it is what
+# says "boot" instead of "dark leg", and what stops the boots merging into the
+# skirt as one dark mass at 96 px.
+[[shape]]
+name = "boot_trim_l"
 z = 13
 silhouette = false
-path = "M 128 140 C 146.778 140 162 153.431 162 170 C 162 186.569 146.778 200 128 200 C 109.222 200 94 186.569 94 170 C 94 153.431 109.222 140 128 140 Z"
+path = "M 102 204 C 110 200, 120 200, 128 204 C 128 207, 128 209, 128 213 C 120 209, 110 209, 102 213 C 102 209, 102 207, 102 204 Z"
+bind = "body"
+fill = { gradient = "trim" }
+
+[[shape]]
+name = "boot_trim_r"
+z = 13
+silhouette = false
+path = "M 128 204 C 136 200, 146 200, 154 204 C 154 207, 154 209, 154 213 C 146 209, 136 209, 128 213 C 128 209, 128 207, 128 204 Z"
+bind = "body"
+fill = { gradient = "trim" }
+
+# The sleeveless jacket. `body` is the name the format's tests know her torso
+# by; it is the whole dark mass, and the shirt, collar and tie are painted on
+# top of it rather than cut out of it.
+[[shape]]
+name = "body"
+z = 14
+silhouette = true
+path = """
+M 128 134
+C 108 134, 99 146, 97 162
+C 95 174, 100 182, 128 182
+C 156 182, 161 174, 159 162
+C 157 146, 148 134, 128 134
+Z"""
+bind = "body"
+fill = { gradient = "jacket" }
+stroke = { gradient = "edge_lit", width = 2.0, alpha = 0.8, join = "round" }
+
+# The violet heart, glowing out through the jacket.
+[[shape]]
+name = "core"
+z = 15
+silhouette = false
+path = "M 128 130 C 148 130, 164 146, 164 166 C 164 186, 148 202, 128 202 C 108 202, 92 186, 92 166 C 92 146, 108 130, 128 130 Z"
 bind = "body"
 fill = { gradient = "core" }
 
 # The cyan mote. Bound to the light bone, so it physically moves inside her.
 [[shape]]
 name = "spark"
-z = 14
+z = 16
 silhouette = false
-path = "M 114 159 C 121.18 159 127 164.82 127 172 C 127 179.18 121.18 185 114 185 C 106.82 185 101 179.18 101 172 C 101 164.82 106.82 159 114 159 Z"
+path = "M 114 153 C 121.18 153, 127 158.82, 127 166 C 127 173.18, 121.18 179, 114 179 C 106.82 179, 101 173.18, 101 166 C 101 158.82, 106.82 153, 114 153 Z"
 bind = "light"
 fill = { gradient = "spark" }
 
-# A cyan collar across her shoulders. The lower half of her was, until this
-# was added, entirely violet — which left the cyan reading as "a hat" rather
-# than as part of the same character. One band of it below the chin ties the
-# two halves together, and at 96 px it is 7 px of colour, comfortably above the
-# 2 px floor.
+# The pleated skirt. Eighty-four units at the hem against a 62-unit waist: the
+# flare is what makes a chibi's lower half read at all, and it stops at y = 197
+# so there is bare thigh under it.
+[[shape]]
+name = "skirt"
+z = 17
+silhouette = true
+path = """
+M 100 158
+C 96 168, 90 182, 86 192
+C 100 197, 156 197, 170 192
+C 166 182, 160 168, 156 158
+C 140 165, 116 165, 100 158
+Z"""
+bind = "body"
+fill = { gradient = "skirt" }
+stroke = { gradient = "edge_lit", width = 2.0, alpha = 0.8, join = "round" }
+
+# Three pleat seams. Texture, not information — they are the difference
+# between good at 512 and better at 512, and they cost five units each.
+[[shape]]
+name = "pleat_l"
+z = 18
+opacity = 0.35
+silhouette = false
+path = "M 108 166 C 106 176, 103 187, 100 196 C 103 197, 105 197, 106 197 C 109 187, 111 176, 113 167 C 111 167, 109 167, 108 166 Z"
+bind = "body"
+fill = { gradient = "trim" }
+
+[[shape]]
+name = "pleat_c"
+z = 18
+opacity = 0.35
+silhouette = false
+path = "M 126 168 C 126 178, 126 188, 126 198 C 128 198, 130 198, 131 198 C 131 188, 131 178, 131 168 C 129 168, 127 168, 126 168 Z"
+bind = "body"
+fill = { gradient = "trim" }
+
+[[shape]]
+name = "pleat_r"
+z = 18
+opacity = 0.35
+silhouette = false
+path = "M 148 166 C 150 176, 153 187, 156 196 C 153 197, 151 197, 150 197 C 147 187, 145 176, 143 167 C 145 167, 147 167, 148 166 Z"
+bind = "body"
+fill = { gradient = "trim" }
+
+# The shirt, showing in the V of the collar and mostly hidden behind the knot.
+# It is deliberately small: a wide white panel across the chest reads as an
+# apron at 96 px, not as a shirt under a jacket. The white that does the work
+# is the collar above it.
+[[shape]]
+name = "shirt"
+z = 19
+silhouette = false
+path = """
+M 128 148
+C 122 148, 118 152, 117 158
+C 116 166, 120 172, 128 174
+C 136 172, 140 166, 139 158
+C 138 152, 134 148, 128 148
+Z"""
+bind = "body"
+fill = { gradient = "shirt" }
+
+# The collar. Two wings meeting under her chin — the cheapest possible signal
+# for "she is wearing clothes", and the thing the old cyan neck-band was
+# standing in for.
 [[shape]]
 name = "collar"
-z = 14
-silhouette = true
-path = "M 128 136 C 147.879 136 164 141.373 164 148 C 164 154.627 147.879 160 128 160 C 108.121 160 92 154.627 92 148 C 92 141.373 108.121 136 128 136 Z"
+z = 20
+silhouette = false
+path = """
+M 128 146
+C 118 146, 108 143, 102 139
+C 104 152, 110 163, 119 168
+C 123 161, 126 154, 128 146
+C 130 154, 133 161, 137 168
+C 146 163, 152 152, 154 139
+C 148 143, 138 146, 128 146
+Z"""
 bind = "body"
-fill = { gradient = "hair" }
-stroke = { gradient = "edge_lit", width = 2.0, alpha = 0.8, join = "round" }
+fill = { gradient = "shirt" }
+stroke = { gradient = "edge_lit", width = 1.4, alpha = 0.55, join = "round" }
+
+# The necktie. NX violet, 20 units wide, running from the knot under her collar
+# to a point just above the skirt hem. It is the only warm-cold break below her
+# chin and the one place the brand colour is unmissable at 96 px.
+[[shape]]
+name = "necktie_knot"
+z = 21
+silhouette = false
+path = "M 128 150 C 132 150, 136 153, 136 157 C 136 161, 132 164, 128 164 C 124 164, 120 161, 120 157 C 120 153, 124 150, 128 150 Z"
+bind = "body"
+fill = { gradient = "dress" }
+
+[[shape]]
+name = "necktie"
+z = 21
+silhouette = false
+path = """
+M 121 162
+C 125 160, 131 160, 135 162
+C 137 172, 138 182, 135 190
+C 132 194, 128 196, 128 196
+C 128 196, 124 194, 121 190
+C 118 182, 119 172, 121 162
+Z"""
+bind = "body"
+fill = { gradient = "dress" }
+stroke = { gradient = "edge_lit", width = 1.4, alpha = 0.5, join = "round" }
 
 # --- the face ----------------------------------------------------------------
 # `shell` is the name the format's tests know her body by. On a chibi the body
@@ -661,7 +1063,7 @@ stroke = { gradient = "edge_lit", width = 2.0, alpha = 0.8, join = "round" }
 
 [[shape]]
 name = "shell"
-z = 15
+z = 25
 silhouette = true
 path = """
 M 128 24
@@ -673,11 +1075,11 @@ Z"""
 bind = "head"
 fill = { gradient = "glass_body" }
 
-# The shadow the hair and the chin cast down the face. Without it the face is
+# The shadow the fringe and the chin cast down the face. Without it the face is
 # a flat disc; with it, it is a sphere.
 [[shape]]
 name = "face_shade"
-z = 16
+z = 26
 silhouette = false
 path = """
 M 128 24
@@ -691,17 +1093,17 @@ fill = { gradient = "facet_shadow" }
 
 [[shape]]
 name = "blush_l"
-z = 17
+z = 27
 silhouette = false
-path = "M 80 112.5 C 88.2843 112.5 95 115.858 95 120 C 95 124.142 88.2843 127.5 80 127.5 C 71.7157 127.5 65 124.142 65 120 C 65 115.858 71.7157 112.5 80 112.5 Z"
+path = "M 84 116.5 C 92.2843 116.5 99 119.858 99 124 C 99 128.142 92.2843 131.5 84 131.5 C 75.7157 131.5 69 128.142 69 124 C 69 119.858 75.7157 116.5 84 116.5 Z"
 bind = "head"
 fill = { gradient = "blush_l" }
 
 [[shape]]
 name = "blush_r"
-z = 17
+z = 27
 silhouette = false
-path = "M 176 112.5 C 184.284 112.5 191 115.858 191 120 C 191 124.142 184.284 127.5 176 127.5 C 167.716 127.5 161 124.142 161 120 C 161 115.858 167.716 112.5 176 112.5 Z"
+path = "M 172 116.5 C 180.284 116.5 187 119.858 187 124 C 187 128.142 180.284 131.5 172 131.5 C 163.716 131.5 157 128.142 157 124 C 157 119.858 163.716 116.5 172 116.5 Z"
 bind = "head"
 fill = { gradient = "blush_r" }
 
@@ -717,10 +1119,12 @@ fill = { gradient = "blush_r" }
 #
 # Both catchlights are upper-left in *both* eyes. Mirroring them would give her
 # two light sources, and DESIGN.md allows one.
+#
+# Nothing in this block moved in the hair-and-outfit revision. They were right.
 
 [[shape]]
 name = "eye_l"
-z = 20
+z = 30
 silhouette = false
 path = "M 101 70 C 113.15 70 123 81.6406 123 96 C 123 110.359 113.15 122 101 122 C 88.8497 122 79 110.359 79 96 C 79 81.6406 88.8497 70 101 70 Z"
 bind = "eye_l"
@@ -728,7 +1132,7 @@ fill = { color = "lash" }
 
 [[shape]]
 name = "eye_r"
-z = 20
+z = 30
 silhouette = false
 path = "M 155 70 C 167.15 70 177 81.6406 177 96 C 177 110.359 167.15 122 155 122 C 142.85 122 133 110.359 133 96 C 133 81.6406 142.85 70 155 70 Z"
 bind = "eye_r"
@@ -736,7 +1140,7 @@ fill = { color = "lash" }
 
 [[shape]]
 name = "iris_l"
-z = 21
+z = 31
 silhouette = false
 path = "M 101 76 C 110.389 76 118 85.402 118 97 C 118 108.598 110.389 118 101 118 C 91.6112 118 84 108.598 84 97 C 84 85.402 91.6112 76 101 76 Z"
 bind = "eye_l"
@@ -744,7 +1148,7 @@ fill = { gradient = "iris_l" }
 
 [[shape]]
 name = "iris_r"
-z = 21
+z = 31
 silhouette = false
 path = "M 155 76 C 164.389 76 172 85.402 172 97 C 172 108.598 164.389 118 155 118 C 145.611 118 138 108.598 138 97 C 138 85.402 145.611 76 155 76 Z"
 bind = "eye_r"
@@ -752,7 +1156,7 @@ fill = { gradient = "iris_r" }
 
 [[shape]]
 name = "pupil_l"
-z = 22
+z = 32
 silhouette = false
 path = "M 101 90 C 104.59 90 107.5 94.0301 107.5 99 C 107.5 103.97 104.59 108 101 108 C 97.4101 108 94.5 103.97 94.5 99 C 94.5 94.0301 97.4101 90 101 90 Z"
 bind = "eye_l"
@@ -760,7 +1164,7 @@ fill = { color = "pupil" }
 
 [[shape]]
 name = "pupil_r"
-z = 22
+z = 32
 silhouette = false
 path = "M 155 90 C 158.59 90 161.5 94.0301 161.5 99 C 161.5 103.97 158.59 108 155 108 C 151.41 108 148.5 103.97 148.5 99 C 148.5 94.0301 151.41 90 155 90 Z"
 bind = "eye_r"
@@ -768,7 +1172,7 @@ fill = { color = "pupil" }
 
 [[shape]]
 name = "glint_l"
-z = 23
+z = 33
 silhouette = false
 path = "M 93 78.5 C 96.5899 78.5 99.5 81.4101 99.5 85 C 99.5 88.5899 96.5899 91.5 93 91.5 C 89.4101 91.5 86.5 88.5899 86.5 85 C 86.5 81.4101 89.4101 78.5 93 78.5 Z"
 bind = "eye_l"
@@ -776,7 +1180,7 @@ fill = { color = "#ffffff" }
 
 [[shape]]
 name = "glint_r"
-z = 23
+z = 33
 silhouette = false
 path = "M 147 78.5 C 150.59 78.5 153.5 81.4101 153.5 85 C 153.5 88.5899 150.59 91.5 147 91.5 C 143.41 91.5 140.5 88.5899 140.5 85 C 140.5 81.4101 143.41 78.5 147 78.5 Z"
 bind = "eye_r"
@@ -784,7 +1188,7 @@ fill = { color = "#ffffff" }
 
 [[shape]]
 name = "glint2_l"
-z = 23
+z = 33
 opacity = 0.8
 silhouette = false
 path = "M 108 104.8 C 109.767 104.8 111.2 106.233 111.2 108 C 111.2 109.767 109.767 111.2 108 111.2 C 106.233 111.2 104.8 109.767 104.8 108 C 104.8 106.233 106.233 104.8 108 104.8 Z"
@@ -793,128 +1197,229 @@ fill = { color = "#ffffff" }
 
 [[shape]]
 name = "glint2_r"
-z = 23
+z = 33
 opacity = 0.8
 silhouette = false
 path = "M 162 104.8 C 163.767 104.8 165.2 106.233 165.2 108 C 165.2 109.767 163.767 111.2 162 111.2 C 160.233 111.2 158.8 109.767 158.8 108 C 158.8 106.233 160.233 104.8 162 104.8 Z"
 bind = "eye_r"
 fill = { color = "#ffffff" }
 
+# The mouth: a flat-topped bowl rather than an oval, so at rest it is a small
+# smile and the expression clips still have one scale channel to work with —
+# `sy` stretches it open for alarmed, `sx` widens it for smug, and it flattens
+# to a line for bored. No nose; a nose at 96 px is a smudge.
 [[shape]]
 name = "mouth"
-z = 24
+z = 34
 silhouette = false
-path = "M 128 128.5 C 132.418 128.5 136 130.515 136 133 C 136 135.485 132.418 137.5 128 137.5 C 123.582 137.5 120 135.485 120 133 C 120 130.515 123.582 128.5 128 128.5 Z"
+path = """
+M 119 130
+C 122 129, 134 129, 137 130
+C 137 136, 133 140, 128 140
+C 123 140, 119 136, 119 130
+Z"""
 bind = "mouth"
-fill = { color = "#571746" }
+fill = { color = "#8c3550" }
 
 # --- hair over the face ------------------------------------------------------
 
-# The fringe. Three points and two notches: the notches are what stop a fringe
-# reading as a helmet, and they are 16 units apart, which survives to 6 px.
+# The fringe, and the single most important shape in the file. A smooth arc
+# here is a visor; this broken hem is the whole difference between "astronaut"
+# and "girl", and it costs nineteen line segments.
+#
+# The shape of the break matters as much as having one. Two earlier attempts
+# failed:
+#
+#   * a smooth curve — the helmet;
+#   * an even zigzag cut nearly to the hairline — which sounds like the obvious
+#     way to make a jagged edge and instead produces a jester's crown, because
+#     a zigzag makes the *skin* wedges exactly as large as the hair ones and
+#     the eye reads whichever is paler. It looked worse than the helmet.
+#
+# What works is what anime actually draws: **two big swept locks meeting at a
+# narrow parting**, each lock's hem broken by two points rather than by a comb
+# of teeth. Reading outward from the middle, the hem hits 124 and 132 at y = 66
+# either side of the part, rises to 108 / 148 at y = 54, drops to points at 96
+# / 160 at y = 74, rises again at 80 / 176, and ends in the long outer points
+# at 66 and 190 at y = 90, which are the two the eye actually registers at
+# 96 px because there is no brow under them.
+#
+# The parting itself is a *narrow* V — eight units wide, cut up to y = 42. A
+# narrow deep notch reads as a parting; a wide shallow one reads as a bald
+# patch, which is what the previous attempt produced.
+#
+# It ends well inside a face that runs 24 to 142 — the cheeks, the mouth and
+# the chin are bare skin. Hair *frames*; a helmet encloses.
 [[shape]]
 name = "hair_front"
-z = 26
+z = 36
 silhouette = true
 path = """
-M 64 84
-C 64 48, 90 24, 128 24
-C 166 24, 192 48, 192 84
-C 187 71, 180 61, 172 50
-C 165 41, 156 36, 148 39
-C 140 42, 134 46, 128 52
-C 122 46, 116 42, 108 39
-C 100 36, 91 41, 84 50
-C 76 61, 69 71, 64 84
+M 58 58
+C 58 32, 87 8, 128 8
+C 169 8, 198 32, 198 58
+L 190 90
+L 176 58
+L 160 74
+L 148 54
+L 132 66
+L 128 42
+L 124 66
+L 108 54
+L 96 74
+L 80 58
+L 66 90
 Z"""
 bind = "head"
 fill = { gradient = "hair" }
 
-# Two strands down the sides of the face. They cost almost nothing and they are
-# what makes the head read as "a face with hair round it" rather than a ball
-# with a cap on.
+# The two locks that frame her cheeks. Sixteen units wide, straddling the edge
+# of the face so half of each sits on skin and half hangs outside it, and both
+# end in points at y = 162 — twenty units below the chin. That overhang is what
+# breaks the head's outline at the bottom corners; between it, the four spikes
+# on `hair_back` and the fringe there is no closed curve left for a helmet to
+# live in.
 [[shape]]
-name = "strand_l"
-z = 27
+name = "lock_l"
+z = 38
 silhouette = true
-path = "M 62.1199 60.4562 C 60.366 71.6811 57.6384 82.935 58.0047 94.2902 C 58.3602 105.313 68.5726 113.942 71.0785 124.682 C 71.6056 126.941 77.4486 125.577 76.9215 123.318 C 74.6778 113.702 76.3137 103.579 75.9953 93.7098 C 75.665 83.4703 80.2985 73.6659 81.8801 63.5438 C 83.0738 55.9045 63.3135 52.8169 62.1199 60.4562 Z"
+path = """
+M 80 46
+C 68 66, 61 92, 63 116
+C 65 132, 67 148, 70 162
+C 73 148, 76 132, 79 116
+C 82 92, 84 66, 84 46
+Z"""
 bind = "head"
 fill = { gradient = "hair" }
 
 [[shape]]
-name = "strand_r"
-z = 27
+name = "lock_r"
+z = 38
 silhouette = true
-path = "M 174.12 63.5438 C 175.701 73.6659 180.335 83.4703 180.005 93.7098 C 179.686 103.579 181.322 113.702 179.078 123.318 C 178.551 125.577 184.394 126.941 184.922 124.682 C 187.427 113.942 197.64 105.313 197.995 94.2902 C 198.362 82.935 195.634 71.6811 193.88 60.4562 C 192.686 52.8169 172.926 55.9045 174.12 63.5438 Z"
+path = """
+M 176 46
+C 188 66, 195 92, 193 116
+C 191 132, 189 148, 186 162
+C 183 148, 180 132, 177 116
+C 174 92, 172 66, 172 46
+Z"""
 bind = "head"
 fill = { gradient = "hair" }
 
-# The ties her tails are gathered into. Bound to the tail's first bone, so they
-# swing with it — the one place in this file where a decoration is load-bearing
-# for motion, because a tie that stayed put would make the tail look detached.
+# --- the hair ties -----------------------------------------------------------
+# Rectangular, dark maroon, set at 45 degrees across the root of each tail,
+# with a grey-silver band down the middle. This is the single most iconic cue
+# the reference character has, and it is the reason two teal masses beside a
+# head read as twintails and not as ears. They are 30 by 18 units — 11 by 7 px
+# at 96 — and they straddle the join, half on the skull and half on the tail,
+# which is also what hides the seam where the tail shape leaves the head.
+#
+# They bind to the tail's *first* bone, so they swing with the root. A tie that
+# stayed put while the tail moved would make the tail look detached, which is
+# the one place in this file where a decoration is load-bearing for motion.
+
 [[shape]]
-name = "tie_l"
-z = 8
+name = "hairtie_r"
+z = 39
 silhouette = true
-path = "M 26.2231 93.892 C 34.5268 96.9143 40.2629 102.099 39.0351 105.472 C 37.8073 108.846 30.0805 109.13 21.7769 106.108 C 13.4732 103.086 7.73712 97.901 8.96492 94.5277 C 10.1927 91.1543 17.9195 90.8697 26.2231 93.892 Z"
-bind = "tail_l2"
-fill = { gradient = "dress" }
+path = "M 186.02 19.84 L 196.96 32.86 L 173.98 52.16 L 163.04 39.14 Z"
+bind = "tail1"
+fill = { gradient = "hairtie" }
 stroke = { gradient = "edge_lit", width = 1.6, alpha = 0.8, join = "round" }
 
 [[shape]]
-name = "tie_r"
-z = 8
+name = "hairtie_band_r"
+z = 40
+silhouette = false
+path = "M 189.43 23.90 L 193.55 28.80 L 170.57 48.10 L 166.45 43.20 Z"
+bind = "tail1"
+fill = { color = "silver" }
+
+[[shape]]
+name = "hairtie_l"
+z = 39
 silhouette = true
-path = "M 229.777 93.892 C 238.081 90.8697 245.807 91.1543 247.035 94.5277 C 248.263 97.901 242.527 103.086 234.223 106.108 C 225.919 109.13 218.193 108.846 216.965 105.472 C 215.737 102.099 221.473 96.9143 229.777 93.892 Z"
-bind = "tail2"
-fill = { gradient = "dress" }
+path = "M 69.98 19.84 L 59.04 32.86 L 82.02 52.16 L 92.96 39.14 Z"
+bind = "tail_l1"
+fill = { gradient = "hairtie" }
 stroke = { gradient = "edge_lit", width = 1.6, alpha = 0.8, join = "round" }
+
+[[shape]]
+name = "hairtie_band_l"
+z = 40
+silhouette = false
+path = "M 66.57 23.90 L 62.45 28.80 L 85.43 48.10 L 89.55 43.20 Z"
+bind = "tail_l1"
+fill = { color = "silver" }
 
 # Brows, drawn over the fringe. Anime does this and it is not an accident: a
-# brow hidden under hair is a brow that cannot act.
+# brow hidden under hair is a brow that cannot act, and the brows are the
+# strongest expression channel she has at 96 px. They sit three units lower
+# than they used to, which puts them under the inner fringe tips instead of on
+# top of them.
 [[shape]]
 name = "brow_l"
-z = 29
+z = 41
 silhouette = false
-path = "M 100.499 56.435 C 107.609 55.4358 113.597 56.2219 113.873 58.1907 C 114.15 60.1596 108.611 62.5657 101.501 63.565 C 94.3912 64.5642 88.4032 63.7781 88.1265 61.8093 C 87.8498 59.8404 93.3891 57.4343 100.499 56.435 Z"
+path = "M 100.499 59.435 C 107.609 58.4358 113.597 59.2219 113.873 61.1907 C 114.15 63.1596 108.611 65.5657 101.501 66.565 C 94.3912 67.5642 88.4032 66.7781 88.1265 64.8093 C 87.8498 62.8404 93.3891 60.4343 100.499 59.435 Z"
 bind = "brow_l"
 fill = { color = "lash" }
 
 [[shape]]
 name = "brow_r"
-z = 29
+z = 41
 silhouette = false
-path = "M 155.501 56.435 C 162.611 57.4343 168.15 59.8404 167.873 61.8093 C 167.597 63.7781 161.609 64.5642 154.499 63.565 C 147.389 62.5657 141.85 60.1596 142.127 58.1907 C 142.403 56.2219 148.391 55.4358 155.501 56.435 Z"
+path = "M 155.501 59.435 C 162.611 60.4343 168.15 62.8404 167.873 64.8093 C 167.597 66.7781 161.609 67.5642 154.499 66.565 C 147.389 65.5657 141.85 63.1596 142.127 61.1907 C 142.403 59.2219 148.391 58.4358 155.501 59.435 Z"
 bind = "brow_r"
 fill = { color = "lash" }
 
-# The crown highlight, riding the light bone.
+# The crown highlight, riding the light bone. Kept well inside the hair outline
+# so it cannot ghost past her edge onto the wallpaper.
 [[shape]]
 name = "sheen"
-z = 30
-opacity = 0.9
+z = 42
+opacity = 0.38
 silhouette = false
 path = """
-M 128 12
-C 172 12, 204 44, 204 90
-C 204 124, 176 150, 128 150
-C 80 150, 52 124, 52 90
-C 52 44, 84 12, 128 12
+M 128 16
+C 163 16, 190 44, 190 82
+C 190 110, 170 132, 128 132
+C 86 132, 66 110, 66 82
+C 66 44, 93 16, 128 16
 Z"""
 bind = "head"
 fill = { gradient = "sheen" }
 
 # --- the lit edge -------------------------------------------------------------
-# One hairline of gradient border round the head, bright top-left to dark
-# bottom-right, drawn last so nothing covers it. Everything else that touches
-# the outside world — tails, dress, feet — carries the same stroke on its own
-# shape, and between them they are what separate her from any wallpaper.
+# One hairline of gradient border round the hair, bright top-left to dark
+# bottom-right, drawn last so nothing covers it. It traces `hair_back` exactly,
+# spikes included, so the broken outline is *drawn* rather than merely implied.
+# Everything else that touches the outside world — tails, jacket, skirt, boots
+# — carries the same stroke on its own shape, and between them they are what
+# separate her from any wallpaper.
 
 [[shape]]
 name = "edge"
-z = 40
+z = 44
 silhouette = false
-path = "M 128 12 C 168 12, 198 42, 198 84 C 198 118, 174 148, 128 148 C 82 148, 58 118, 58 84 C 58 42, 88 12, 128 12 Z"
+path = """
+M 128 8
+C 169 8, 198 38, 198 82
+C 198 104, 197 120, 194 132
+L 202 158
+L 190 136
+L 186 160
+L 176 132
+C 168 145, 148 151, 128 151
+C 108 151, 88 145, 80 132
+L 70 160
+L 66 136
+L 54 158
+L 62 132
+C 59 120, 58 104, 58 82
+C 58 38, 87 8, 128 8
+Z"""
 bind = "head"
 stroke = { gradient = "edge_lit", width = 2.8, join = "round" }
 
