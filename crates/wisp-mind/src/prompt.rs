@@ -25,6 +25,7 @@
 //! else decides. A model that believes it is talking directly to someone writes
 //! differently from one that knows it is submitting a suggestion.
 
+use crate::mood::MoodExt;
 use serde::{Deserialize, Serialize};
 use wisp_proto::Tier;
 

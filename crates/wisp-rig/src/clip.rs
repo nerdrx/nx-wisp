@@ -154,6 +154,31 @@ pub const REQUIRED_EXPRESSIONS: [&str; 8] = [
 mod tests {
     use super::*;
 
+    /// SPEC §3.8 points the dependency the right way: `wisp-proto` holds the
+    /// mood vocabulary and the expression NAMES, and this crate holds the
+    /// authoritative list of expressions a skin must provide. Neither can
+    /// depend on the other's table, so the coupling is checked here instead.
+    #[test]
+    fn every_mood_maps_onto_an_expression_a_skin_must_have() {
+        for m in wisp_proto::Mood::ALL {
+            assert!(
+                REQUIRED_EXPRESSIONS.contains(&m.expression()),
+                "mood {m:?} wants expression {:?}, which no skin is required to draw",
+                m.expression()
+            );
+        }
+    }
+
+    #[test]
+    fn no_required_expression_is_unreachable() {
+        for e in REQUIRED_EXPRESSIONS {
+            assert!(
+                wisp_proto::Mood::ALL.iter().any(|m| m.expression() == e),
+                "expression {e:?} is required of every skin but no mood ever asks for it"
+            );
+        }
+    }
+
     fn track() -> Track {
         Track::new(0, Channel::Ty)
             .key(0.0, 0.0, Ease::Soft)

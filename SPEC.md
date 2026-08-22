@@ -103,6 +103,24 @@ governs **chrome** — speech bubbles, panels, menus, the rig editor. It does
 cute; roundness is correct for her. Do not "fix" a skin to comply with the
 geometry rule.
 
+### 3.8 Mood
+
+The **vocabulary** of moods lives in `wisp-proto`, along with the mapping from a
+mood to the expression name a skin must provide. Four crates speak it —
+`wisp-mind` decides it, `wisp-attn` gates behaviour on it, `wisp-voice` colours
+speech with it, `wisp-rig` draws it — and before this amendment three identical
+copies of the enum existed plus a mapping table maintained in a fourth place.
+
+The **machine** stays in `wisp-mind`. §2 is right that deciding how she feels is
+cognition's job; only the words are shared. Anything that is one crate's opinion
+*about* a mood (its prompt line, its interruption bias, its voice pitch) belongs
+to that crate, as an extension trait.
+
+`wisp-proto` cannot depend on `wisp-rig`, so proto holds the expression *names*
+and `wisp-rig` holds the authoritative list, with a test in `wisp-rig` asserting
+each covers the other. The dependency points the right way and the coupling
+stays checkable.
+
 ### 3.6 Skin format
 
 Declarative and data-only. A skin can never contain executable code. Versioned;

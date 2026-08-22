@@ -72,22 +72,10 @@ pub enum Chattiness {
 /// is the projection the behaviour trees read, and it is deliberately a small
 /// closed set so a skin can name its clips after it.
 ///
-/// *Contract note:* `wisp-proto` does not define a shared mood type, so this
-/// one lives here. If mood ever becomes a cross-crate contract it belongs in
-/// proto as a spec amendment, and this becomes a re-export.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Serialize, Deserialize)]
-pub enum Mood {
-    #[default]
-    Calm,
-    Curious,
-    Playful,
-    Smug,
-    Sulky,
-    Focused,
-    Sleepy,
-    Alarmed,
-    Affectionate,
-}
+/// Re-exported from `wisp-proto` (SPEC §3.8). Three identical copies of this
+/// enum used to exist; the vocabulary is shared, the machine that decides it
+/// is `wisp-mind`'s.
+pub use wisp_proto::Mood;
 
 /// One pass of her attention: what she wants to do, and what she got to say.
 ///

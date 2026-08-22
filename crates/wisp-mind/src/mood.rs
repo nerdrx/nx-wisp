@@ -39,59 +39,37 @@
 use serde::{Deserialize, Serialize};
 use wisp_proto::{Millis, Observation, Tier};
 
-/// Her disposition.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Serialize, Deserialize, Hash,
-)]
-pub enum Mood {
-    #[default]
-    Calm,
-    Curious,
-    Playful,
-    Smug,
-    Sulky,
-    Focused,
-    Sleepy,
-    Alarmed,
-    Affectionate,
+/// Re-exported from `wisp-proto` (SPEC §3.8).
+///
+/// The vocabulary is shared because four crates speak it. The state machine
+/// below stays here: SPEC §2 is right that deciding how she feels is
+/// cognition's job, and only the words needed to move.
+pub use wisp_proto::Mood;
+
+/// Mind-specific behaviour hung off the shared [`Mood`] vocabulary.
+///
+/// `Mood` moved to `wisp-proto` (SPEC §3.8) because four crates speak it, and
+/// an inherent `impl` on a foreign type is not allowed — so what is genuinely
+/// cognition's opinion about a mood lives here instead of leaking into the
+/// shared contract. Proto keeps the words and the expression mapping; this
+/// keeps the prompting and the drives.
+pub trait MoodExt {
+    fn prompt_line(self) -> &'static str;
+    fn interruption_bias(self) -> f32;
+    fn voice_pitch(self) -> f32;
+    /// Is this urgent enough to skip the dwell timer?
+    fn is_interrupt(self) -> bool;
 }
 
-impl Mood {
-    pub const ALL: [Mood; 9] = [
-        Mood::Calm,
-        Mood::Curious,
-        Mood::Playful,
-        Mood::Smug,
-        Mood::Sulky,
-        Mood::Focused,
-        Mood::Sleepy,
-        Mood::Alarmed,
-        Mood::Affectionate,
-    ];
-
-    /// Onto `wisp_rig::REQUIRED_EXPRESSIONS`. Identical to
-    /// `wisp::app::expression_for`, which is the mapping the binary already
-    /// ships; duplicating it is the cost of `Mood` not being in `wisp-proto`.
-    ///
-    /// The two sets are different sizes on purpose: a mood is a disposition, an
-    /// expression is a face, and a skin author should not have to draw nine.
-    pub fn expression(self) -> &'static str {
-        match self {
-            Mood::Calm => "neutral",
-            Mood::Curious => "curious",
-            Mood::Playful | Mood::Affectionate => "delighted",
-            Mood::Smug => "smug",
-            Mood::Sulky => "worried",
-            Mood::Focused => "bored",
-            Mood::Sleepy => "sleepy",
-            Mood::Alarmed => "alarmed",
-        }
+impl MoodExt for Mood {
+    fn is_interrupt(self) -> bool {
+        matches!(self, Mood::Alarmed)
     }
 
     /// The line appended to the volatile half of the system prompt. Short on
     /// purpose: this is *after* the cached persona prefix (F15), so every token
     /// here is one that has to be prefilled on every single turn.
-    pub fn prompt_line(self) -> &'static str {
+    fn prompt_line(self) -> &'static str {
         match self {
             Mood::Calm => "You are settled and unhurried.",
             Mood::Curious => "Something has caught your interest; you want to know more.",
@@ -104,10 +82,9 @@ impl Mood {
             Mood::Affectionate => "You are glad they are here.",
         }
     }
-
     /// How willing she is to spend attention, as a multiplier `wisp-attn` can
     /// apply to a proposal's cost. Below 1.0 is *more* willing.
-    pub fn interruption_bias(self) -> f32 {
+    fn interruption_bias(self) -> f32 {
         match self {
             Mood::Alarmed => 0.0,
             Mood::Playful | Mood::Curious => 0.8,
@@ -120,9 +97,8 @@ impl Mood {
             Mood::Focused => 2.5,
         }
     }
-
     /// Voice pitch multiplier for `wisp-voice` (F19 names it explicitly).
-    pub fn voice_pitch(self) -> f32 {
+    fn voice_pitch(self) -> f32 {
         match self {
             Mood::Sleepy => 0.92,
             Mood::Sulky => 0.95,
@@ -132,11 +108,6 @@ impl Mood {
             Mood::Playful => 1.09,
             Mood::Alarmed => 1.12,
         }
-    }
-
-    /// Is this urgent enough to skip the dwell timer?
-    fn is_interrupt(self) -> bool {
-        matches!(self, Mood::Alarmed)
     }
 }
 

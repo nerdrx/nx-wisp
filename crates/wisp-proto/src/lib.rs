@@ -8,11 +8,13 @@
 pub mod attn;
 pub mod event;
 pub mod gov;
+pub mod mood;
 pub mod sense;
 
 pub use attn::{Urgency, Utterance};
 pub use event::{Event, EventKind};
 pub use gov::{Cost, Governed, Tier, TierReason};
+pub use mood::Mood;
 pub use sense::{Consent, Observation, SenseId};
 
 /// Monotonic milliseconds since process start. We never use wall-clock time for

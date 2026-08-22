@@ -836,17 +836,13 @@ const CLIP_FADE_MS: f32 = 120.0;
 /// expression is a face, and a skin author should not have to author nine of
 /// them. Every arm lands on a name in [`wisp_rig::REQUIRED_EXPRESSIONS`], so
 /// every skin that validates can show every mood.
+/// Delegates to [`wisp_proto::Mood::expression`] (SPEC §3.8).
+///
+/// This function used to own the table. It was the fourth place the mood
+/// vocabulary appeared, and the only one that mapped it to an expression, so
+/// it was also the only place a new mood could be silently forgotten.
 pub fn expression_for(mood: Mood) -> &'static str {
-    match mood {
-        Mood::Calm => "neutral",
-        Mood::Curious => "curious",
-        Mood::Playful | Mood::Affectionate => "delighted",
-        Mood::Smug => "smug",
-        Mood::Sulky => "worried",
-        Mood::Focused => "bored",
-        Mood::Sleepy => "sleepy",
-        Mood::Alarmed => "alarmed",
-    }
+    mood.expression()
 }
 
 // ---------------------------------------------------------------------------
