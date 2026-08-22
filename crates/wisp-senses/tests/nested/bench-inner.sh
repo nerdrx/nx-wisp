@@ -5,12 +5,23 @@ SOCKET="nxwisp-bench-$$"
 export WAYLAND_DISPLAY="$SOCKET"
 export QT_QPA_PLATFORM=wayland
 
-# Kill the nested compositor on every exit path, not just the happy one.
-trap 'kill "${KWIN:-}" 2>/dev/null; wait "${KWIN:-}" 2>/dev/null' EXIT INT TERM
-
 kwin_wayland --virtual --width 1920 --height 1080 --no-global-shortcuts \
     --socket "$SOCKET" -- kwrite >/tmp/nx-wisp-bench-kwin.log 2>&1 &
 KWIN=$!
+
+# If anything kills this script — a `timeout` on the caller, Ctrl-C, an error —
+# the nested compositor must go with it. Without this a killed run leaves a
+# headless KWin and a kwrite running on the operator's machine indefinitely,
+# which is precisely the sort of mess a test harness must not make.
+cleanup() {
+    trap - EXIT INT TERM HUP
+    kill "$KWIN" 2>/dev/null
+    wait "$KWIN" 2>/dev/null
+    exit "${1:-0}"
+}
+trap 'cleanup 130' INT
+trap 'cleanup 143' TERM HUP
+trap 'cleanup 0' EXIT
 
 for _ in $(seq 1 80); do
     busctl --user status org.kde.KWin >/dev/null 2>&1 && break
@@ -32,10 +43,9 @@ for F in 0 4 8 16 33; do
 done
 
 scripting unloadScript s nxwisp-bench 2>/dev/null
-kill "$KWIN" 2>/dev/null
-wait "$KWIN" 2>/dev/null
 
-# We killed KWin on purpose, so `wait` hands back 128+signal. Exiting on that
-# would report a clean sweep as a failure, which is exactly the kind of noise
-# that trains you to ignore a harness.
-exit 0
+# The EXIT trap tears KWin down. It also forces status 0: we kill KWin on
+# purpose, so `wait` hands back 128+signal, and exiting on that would report a
+# clean sweep as a failure — the kind of noise that trains you to ignore a
+# harness.
+cleanup 0

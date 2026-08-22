@@ -50,14 +50,23 @@ OUT="$(mktemp -t nx-wisp-bench.XXXXXX)"
 ERR="$(mktemp -t nx-wisp-bench-err.XXXXXX)"
 cleanup() {
     local st=$?
-    # Negative PID = the whole process group: kwin, kwrite, dbus-daemon, all of it.
-    kill -TERM -$$ 2>/dev/null
-    sleep 0.2
-    kill -KILL -$$ 2>/dev/null
+    # `setsid` puts the nested session in its OWN process group, so signalling
+    # ours would never reach it — that mistake left real orphans on the first
+    # attempt at this fix. The setsid pid IS the new group's leader, so the
+    # group to signal is its negated pid.
+    if [ -n "${INNER:-}" ]; then
+        kill -TERM "-$INNER" 2>/dev/null || kill -TERM "$INNER" 2>/dev/null
+        for _ in 1 2 3 4 5 6 7 8 9 10; do
+            kill -0 "-$INNER" 2>/dev/null || break
+            sleep 0.1
+        done
+        kill -KILL "-$INNER" 2>/dev/null
+    fi
     rm -f "$OUT" "$ERR"
     exit "$st"
 }
-trap cleanup EXIT INT TERM
+INNER=""
+trap cleanup EXIT INT TERM HUP
 
 setsid --wait dbus-run-session -- bash "$HERE/bench-inner.sh" >"$OUT" 2>"$ERR" &
 INNER=$!
