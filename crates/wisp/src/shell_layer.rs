@@ -25,6 +25,10 @@ pub struct LayerShellHost {
     params: PhysicsParams,
     last: Instant,
     closed: bool,
+    /// Output-space position the NEXT frame was built for.
+    pending: Vec2,
+    /// That same position expressed within the surface — what `anchor` returns.
+    local: Vec2,
 }
 
 impl LayerShellHost {
@@ -38,17 +42,27 @@ impl LayerShellHost {
             shell.block();
         }
 
-        let (w, h) = shell.surface_size();
+        // She roams the whole OUTPUT; the surface is a small window that
+        // follows her. Until the compositor announces an output we fall back to
+        // the surface itself, so she is contained rather than lost.
+        let (sw, sh) = shell.surface_size();
+        let (ow, oh) = shell
+            .output_size()
+            .map(|(w, h)| (w as f32, h as f32))
+            .unwrap_or((sw as f32, sh as f32));
+        let start = Vec2 { x: ow * 0.5, y: oh * 0.35 };
+        let local = shell.local_for(start);
         Ok(LayerShellHost {
-            body: BodyState {
-                pos: Vec2 { x: w as f32 * 0.5, y: h as f32 * 0.35 },
-                ..Default::default()
-            },
-            ground: Surface { id: 1, y: h as f32 - 12.0, x0: 0.0, x1: w as f32 },
+            body: BodyState { pos: start, ..Default::default() },
+            // The bottom of the screen is her floor until the terrain feed is
+            // wired up and she can stand on your windows.
+            ground: Surface { id: 1, y: oh - 12.0, x0: 0.0, x1: ow },
             bounds: Rect {
                 min: Vec2 { x: 0.0, y: 0.0 },
-                max: Vec2 { x: w as f32, y: h as f32 },
+                max: Vec2 { x: ow, y: oh },
             },
+            pending: start,
+            local,
             shell,
             cursor: None,
             grab: None,
@@ -67,7 +81,10 @@ impl LayerShellHost {
         if tick.closed {
             self.closed = true;
         }
-        if let Some(p) = tick.pointer {
+        // Pointer arrives in SURFACE coordinates; her world is output space.
+        let (ox, oy) = self.shell.origin_for(self.pending);
+        let to_output = |p: Vec2| Vec2 { x: p.x + ox as f32, y: p.y + oy as f32 };
+        if let Some(p) = tick.pointer.map(to_output) {
             self.cursor = Some(p);
             if self.grab.is_some() {
                 self.grab = Some(p);
@@ -100,11 +117,20 @@ impl Shell for LayerShellHost {
             (now - self.last).as_secs_f32().min(0.05)
         };
         self.last = now;
+
+        // Park the surface to match the position this frame was actually built
+        // for. Doing it in this order means the box and the creature never
+        // disagree, even by one frame.
+        self.shell.follow(self.pending);
+        self.shell.draw(frame, input_region);
+
+        // Then advance the world, and work out where she will be drawn next.
         self.pump(dt);
         if self.closed {
             return;
         }
-        self.shell.draw(frame, input_region);
+        self.pending = self.body.pos;
+        self.local = self.shell.local_for(self.body.pos);
     }
 
     fn set_tier(&mut self, tier: Tier) {
@@ -112,11 +138,15 @@ impl Shell for LayerShellHost {
     }
 
     fn cursor(&self) -> Option<(f32, f32)> {
-        self.cursor.map(|c| (c.x, c.y))
+        // Kept in output space for the physics grab, but the rig poses in
+        // surface space, so convert back or her look-at aims off-screen.
+        let (ox, oy) = self.shell.origin_for(self.pending);
+        self.cursor.map(|c| (c.x - ox as f32, c.y - oy as f32))
     }
 
     fn anchor(&self) -> Option<(f32, f32)> {
-        Some((self.body.pos.x, self.body.pos.y))
+        // In-surface coordinates: the rig draws into the surface, not the screen.
+        Some((self.local.x, self.local.y))
     }
 
     fn contour_options(&self) -> ContourOptions {

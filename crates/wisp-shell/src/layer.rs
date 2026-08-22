@@ -97,6 +97,11 @@ struct State {
 
     width: u32,
     height: u32,
+    /// The output she is roaming, in logical pixels. Until the compositor tells
+    /// us, we assume nothing and keep her inside the surface.
+    output: Option<(i32, i32)>,
+    /// The output the surface is currently on, once the compositor says so.
+    on_output: Option<wl_output::WlOutput>,
     /// Surface position, as layer-shell margins from the top-left of the output.
     pos: (i32, i32),
     configured: bool,
@@ -209,12 +214,24 @@ impl WispShell {
             width: side,
             height: side,
             pos: (200, 200),
+            output: None,
+            on_output: None,
             configured: false,
             exit: false,
             tick: Tick::default(),
             region_hash: u64::MAX,
         };
-        Ok(WispShell { state, queue, conn })
+        let mut shell = WispShell { state, queue, conn };
+        // registry_queue_init only BINDS the globals; the wl_output geometry,
+        // mode and done events arrive afterwards. Without a roundtrip here
+        // OutputState::info returns None and she concludes the screen is
+        // exactly as big as her own surface — so she could never roam.
+        // Two roundtrips: the first delivers the outputs, the second their
+        // xdg_output logical sizes.
+        for _ in 0..2 {
+            let _ = shell.queue.roundtrip(&mut shell.state);
+        }
+        Ok(shell)
     }
 
     /// Pump the compositor. Non-blocking: returns what happened.
@@ -253,6 +270,71 @@ impl WispShell {
 
     pub fn position(&self) -> (i32, i32) {
         self.state.pos
+    }
+
+    /// The roaming area in logical pixels — the output she is on, once the
+    /// compositor has told us about it.
+    pub fn output_size(&self) -> Option<(i32, i32)> {
+        self.state.live_output_size()
+    }
+
+    /// Diagnostic: what the compositor has actually told us about outputs.
+    pub fn describe_outputs(&self) -> Vec<String> {
+        self.state
+            .output_state
+            .outputs()
+            .map(|o| {
+                match self.state.output_state.info(&o) {
+                    Some(i) => format!(
+                        "name={:?} logical={:?} modes={} current={:?}",
+                        i.name,
+                        i.logical_size,
+                        i.modes.len(),
+                        i.modes.iter().find(|m| m.current).map(|m| m.dimensions)
+                    ),
+                    None => "no info yet".to_string(),
+                }
+            })
+            .collect()
+    }
+
+    /// Park the surface so it is centred on `at`, an OUTPUT-space position, and
+    /// return where she should be drawn WITHIN the surface.
+    ///
+    /// A fullscreen overlay would be the obvious way to let her roam, but it
+    /// clears a whole screen's worth of buffer every frame for a creature the
+    /// size of a postage stamp — which is exactly the cost the charter forbids.
+    /// So the surface stays small and follows her instead. We already commit
+    /// once per frame to draw, so moving it costs no extra round trip.
+    pub fn follow(&mut self, at: Vec2) -> Vec2 {
+        let (ox, oy) = self.origin_for(at);
+        self.set_position(ox, oy);
+        Vec2 { x: at.x - ox as f32, y: at.y - oy as f32 }
+    }
+
+    /// Where the surface would be parked for `at`, without moving it. Pure, so
+    /// the host can work out her in-surface position for the frame it is about
+    /// to build and have it match what `follow` will do next frame exactly.
+    pub fn origin_for(&self, at: Vec2) -> (i32, i32) {
+        let (sw, sh) = (self.state.width as f32, self.state.height as f32);
+        let mut ox = (at.x - sw * 0.5).round() as i32;
+        let mut oy = (at.y - sh * 0.5).round() as i32;
+        if let Some((ow, oh)) = self.state.live_output_size() {
+            // Never park the surface off the edge of the output: the compositor
+            // clamps it, and she would silently stop tracking.
+            ox = ox.clamp(0, (ow - sw as i32).max(0));
+            oy = oy.clamp(0, (oh - sh as i32).max(0));
+        } else {
+            ox = ox.max(0);
+            oy = oy.max(0);
+        }
+        (ox, oy)
+    }
+
+    /// Her position within the surface, for a given output-space position.
+    pub fn local_for(&self, at: Vec2) -> Vec2 {
+        let (ox, oy) = self.origin_for(at);
+        Vec2 { x: at.x - ox as f32, y: at.y - oy as f32 }
     }
 
     pub fn surface_size(&self) -> (u32, u32) {
@@ -360,6 +442,42 @@ fn spans(poly: &Polygon) -> Vec<(i32, i32, i32)> {
 }
 
 impl State {
+    /// Remember how big the output is, so she knows where the edges are.
+    ///
+    /// `logical_size` is what we want — it is already scale-corrected, which
+    /// the raw mode is not. On a mixed-DPI setup taking the mode would put her
+    /// edges in the wrong place.
+    fn learn_output(&mut self, o: &wl_output::WlOutput) {
+        if let Some(size) = self.size_of(o) {
+            self.output = Some(size);
+        }
+    }
+
+    fn size_of(&self, o: &wl_output::WlOutput) -> Option<(i32, i32)> {
+        let info = self.output_state.info(o)?;
+        // logical_size is already scale-corrected; the raw mode is not, so on a
+        // mixed-DPI setup taking the mode puts her edges in the wrong place.
+        info.logical_size
+            .or_else(|| info.modes.iter().find(|m| m.current).map(|m| m.dimensions))
+    }
+
+    /// Ask the compositor now, rather than trusting what we cached.
+    ///
+    /// sctk only fills `OutputInfo` after the output's `done` event, so reading
+    /// it inside `new_output` yields an empty record — which is why she used to
+    /// think the screen was exactly as big as her own surface.
+    fn live_output_size(&self) -> Option<(i32, i32)> {
+        if let Some(o) = &self.on_output {
+            if let Some(s) = self.size_of(o) {
+                return Some(s);
+            }
+        }
+        self.output_state
+            .outputs()
+            .find_map(|o| self.size_of(&o))
+            .or(self.output)
+    }
+
     /// Install the silhouette as the surface's input region, so clicks land on
     /// her and pass through everywhere else (F2).
     ///
@@ -403,7 +521,9 @@ impl CompositorHandler for State {
     fn frame(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_surface::WlSurface, _: u32) {
         self.tick.drew = false; // host draws on the next pump
     }
-    fn surface_enter(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_surface::WlSurface, _: &wl_output::WlOutput) {}
+    fn surface_enter(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_surface::WlSurface, o: &wl_output::WlOutput) {
+        self.on_output = Some(o.clone());
+    }
     fn surface_leave(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_surface::WlSurface, _: &wl_output::WlOutput) {}
 }
 
@@ -464,8 +584,12 @@ impl PointerHandler for State {
 
 impl OutputHandler for State {
     fn output_state(&mut self) -> &mut OutputState { &mut self.output_state }
-    fn new_output(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_output::WlOutput) {}
-    fn update_output(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_output::WlOutput) {}
+    fn new_output(&mut self, _: &Connection, _: &QueueHandle<Self>, o: wl_output::WlOutput) {
+        self.learn_output(&o);
+    }
+    fn update_output(&mut self, _: &Connection, _: &QueueHandle<Self>, o: wl_output::WlOutput) {
+        self.learn_output(&o);
+    }
     fn output_destroyed(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_output::WlOutput) {}
 }
 

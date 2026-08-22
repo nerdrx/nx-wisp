@@ -36,18 +36,23 @@ fn main() {
         eprintln!("the compositor never configured the layer surface");
         std::process::exit(3);
     }
-    let (w, h) = shell.surface_size();
-    println!("layer surface configured: {w}x{h}");
+    let (sw, sh) = shell.surface_size();
+    let (ow, oh) = shell.output_size().map(|(w, h)| (w as f32, h as f32)).unwrap_or((sw as f32, sh as f32));
+    println!("surface {sw}x{sh}, roaming an output of {ow}x{oh}");
+    for line in shell.describe_outputs() {
+        println!("  output: {line}");
+    }
 
-    let ground = Surface { id: 1, y: h as f32 - 12.0, x0: 0.0, x1: w as f32 };
-    let bounds = Rect {
-        min: Vec2 { x: 0.0, y: 0.0 },
-        max: Vec2 { x: w as f32, y: h as f32 },
-    };
+    let ground = Surface { id: 1, y: oh - 12.0, x0: 0.0, x1: ow };
+    let bounds = Rect { min: Vec2 { x: 0.0, y: 0.0 }, max: Vec2 { x: ow, y: oh } };
     let mut body = BodyState {
-        pos: Vec2 { x: w as f32 * 0.5, y: h as f32 * 0.35 },
+        pos: Vec2 { x: ow * 0.5, y: oh * 0.2 },
         ..Default::default()
     };
+    // Give her a shove so she actually crosses the screen instead of dropping
+    // straight down — this is the roaming proof.
+    body.vel = Vec2 { x: 420.0, y: 0.0 };
+    let (mut min_x, mut max_x) = (f32::MAX, f32::MIN);
 
     let params = PhysicsParams::default();
     let mut cursor: Option<Vec2> = None;
@@ -86,12 +91,15 @@ fn main() {
             wind: Vec2::ZERO,
         };
         body = step(&body, dt, &forces).state;
+        min_x = min_x.min(body.pos.x);
+        max_x = max_x.max(body.pos.x);
+        let local = shell.follow(body.pos);
 
         rig.update(
             dt,
             &RigInput {
                 size_px: cfg.size_px,
-                anchor: body.pos,
+                anchor: local,
                 velocity: body.vel,
                 cursor,
                 attention: cursor,
@@ -108,4 +116,5 @@ fn main() {
         std::thread::sleep(Duration::from_millis(16));
     }
     println!("{frames} frames — she was on your desktop");
+    println!("she travelled x {:.0}..{:.0} of a {ow:.0}px-wide screen", min_x, max_x);
 }
