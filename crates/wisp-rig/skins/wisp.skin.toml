@@ -1,0 +1,1112 @@
+# Wisp — the default NX Wisp skin (F73)
+#
+# A small floating mote of deep-space glass. Violet #7700FF core, cyan #00e5ff
+# light moving *inside* it, angular faceting on the shell, a soft trailing
+# tail, two simple expressive eyes.
+#
+# Design rules this file obeys (docs/DESIGN.md v1.5):
+#   - Angular, never rounded. Every corner of the shell is a cut, not a curve;
+#     the chamfers are 8-10 canvas units, which is 4-5px at her 128px default.
+#     There is not one pill shape or perfect circle in the file.
+#   - One light source, upper-left. Every gradient runs from (74, 46) towards
+#     (182, 176) or is centred above and left of the thing it lights.
+#   - Light rides motion. The core, the spark and the sheen all `follow_bone`
+#     the `light` bone, which the rig displaces against her travel — so the
+#     highlight slides through the glass as she moves instead of flashing.
+#   - Violet leads, cyan is light inside the material, never a surface colour.
+#
+# Everything here is data. There is no expression language in this format and
+# no way for a skin to run code (SPEC.md §3.6).
+#
+# Canvas is 256x256 units and maps onto whatever pixel size the operator picks
+# (F75, 48-512px), so she is sharp on a 4K display at any size.
+
+format = "nx-wisp-skin"
+version = 1
+
+[meta]
+name = "Wisp"
+author = "nerdrx"
+license = "MIT"
+summary = "A mote of deep-space glass with a violet core and cyan light moving inside it."
+default_size_px = 128.0
+min_size_px = 48.0
+max_size_px = 512.0
+
+[canvas]
+size = [256.0, 256.0]
+# She floats, so the anchor sits at the bottom point of the shell — that is
+# what rests on a title bar and what the physics body tracks.
+anchor = [128.0, 168.0]
+
+[physics]
+gravity = 1500.0
+drag = 0.75
+restitution = 0.3
+friction = 0.05
+max_speed = 3600.0
+rest_speed = 40.0
+hard_landing_speed = 820.0
+recovery_time_ms = 420.0
+grab_transfer = 0.68
+
+[motion]
+squash_bone = "body"
+squash_gain = 0.0006
+squash_max = 0.24
+squash_deadzone = 10.0
+lean_bone = "body"
+lean_stiffness = 210.0
+lean_damping_ratio = 0.52
+lean_gain = 0.4
+light_bone = "light"
+light_gain = 0.024
+light_range = 16.0
+
+# --- palette ----------------------------------------------------------------
+# The NX anchors, named once. DESIGN.md §1.
+
+[[color]]
+name = "violet"
+value = "#7700ff"
+
+[[color]]
+name = "violet_soft"
+value = "#9a3cff"
+
+[[color]]
+name = "cyan"
+value = "#00e5ff"
+
+[[color]]
+name = "text"
+value = "#efeaff"
+
+[[color]]
+name = "deep"
+value = "#12091f"
+
+[[color]]
+name = "pupil"
+value = "#1a0f30"
+
+# --- gradients ---------------------------------------------------------------
+
+# The violet bloom she sits in. Not part of the silhouette — you click through
+# it (F2).
+[[gradient]]
+name = "aura"
+kind = "radial"
+center = [128.0, 114.0]
+focus = [106.0, 88.0]
+radius = 122.0
+stop_at = [0.0, 0.42, 0.72, 1.0]
+stop_color = ["#7700ff4d", "#7700ff26", "#7700ff0f", "#7700ff00"]
+
+# The glass body itself. Opaque, because v1.5 §4 makes structural surfaces
+# opaque elevation steps — the nebula lives between the panels, not behind
+# them, and the same rule keeps her readable over a bright window.
+[[gradient]]
+name = "glass_body"
+kind = "linear"
+start = [74.0, 46.0]
+end = [182.0, 176.0]
+stop_at = [0.0, 0.34, 1.0]
+stop_color = ["#2e1e4e", "#20153a", "#100a1e"]
+
+# The violet core, glowing from inside. Follows the light bone.
+[[gradient]]
+name = "core"
+kind = "radial"
+center = [128.0, 120.0]
+focus = [112.0, 100.0]
+radius = 42.0
+follow_bone = "light"
+stop_at = [0.0, 0.34, 0.72, 1.0]
+stop_color = ["#9a3cffb0", "#7700ff8c", "#7700ff33", "#7700ff00"]
+
+# The cyan mote — the light that moves *inside* her. Small, hot, and never a
+# surface colour.
+[[gradient]]
+name = "spark"
+kind = "radial"
+center = [116.0, 132.0]
+focus = [110.0, 124.0]
+radius = 16.0
+follow_bone = "light"
+stop_at = [0.0, 0.32, 0.68, 1.0]
+stop_color = ["#e6fcffcc", "#00e5ff99", "#00e5ff33", "#00e5ff00"]
+
+# The lit upper-left facet.
+[[gradient]]
+name = "facet_light"
+kind = "linear"
+start = [96.0, 48.0]
+end = [122.0, 112.0]
+stop_at = [0.0, 0.55, 1.0]
+stop_color = ["#ffffff30", "#ffffff12", "#ffffff00"]
+
+# ...and the shadowed lower-right one. Same light, other side.
+[[gradient]]
+name = "facet_shadow"
+kind = "linear"
+start = [150.0, 106.0]
+end = [180.0, 162.0]
+stop_at = [0.0, 1.0]
+stop_color = ["#00000000", "#00000055"]
+
+# DESIGN.md's --edge-lit: bright top-left, violet, a breath of cyan, then dark.
+[[gradient]]
+name = "edge_lit"
+kind = "linear"
+start = [74.0, 46.0]
+end = [182.0, 176.0]
+stop_at = [0.0, 0.3, 0.58, 1.0]
+stop_color = ["#e2c8ff9e", "#9a3cff47", "#00e5ff1a", "#0000004d"]
+
+# The specular band. Bound to the light bone, so it is a function of where she
+# is going — not a sweep fired on an event.
+[[gradient]]
+name = "sheen"
+kind = "linear"
+start = [84.0, 56.0]
+end = [146.0, 124.0]
+follow_bone = "light"
+stop_at = [0.0, 0.44, 0.6, 1.0]
+stop_color = ["#ffffff00", "#ffffff2e", "#d6beff18", "#ffffff00"]
+
+# The tail. Cyan at the root where it leaves her, fading to nothing.
+[[gradient]]
+name = "tail_glow"
+kind = "linear"
+start = [128.0, 160.0]
+end = [128.0, 252.0]
+stop_at = [0.0, 0.45, 1.0]
+stop_color = ["#9a3cffc4", "#7700ff70", "#00e5ff00"]
+
+# --- skeleton ----------------------------------------------------------------
+#
+#   root ── body ─┬─ head ── gaze ─┬─ eye_l
+#                 │                └─ eye_r
+#                 ├─ light
+#                 └─ tail1 ── tail2 ── tail3
+#
+# `gaze` exists so the look-at constraint has a bone of its own: an IK
+# constraint owns the rotation channel it writes, so authored head motion goes
+# on `head` and the two compose instead of fighting.
+#
+# It pivots *below* the eyes, at the middle of the body, not between them. A
+# pivot between the eyes only tilts them; a pivot behind them swings them
+# sideways, which is what reads as looking rather than as a head tilt.
+
+[[bone]]
+name = "root"
+pos = [128.0, 168.0]
+
+[[bone]]
+name = "body"
+parent = "root"
+pos = [0.0, -56.0]
+length = 60.0
+
+[[bone]]
+name = "head"
+parent = "body"
+pos = [0.0, -26.0]
+length = 20.0
+
+[[bone]]
+name = "gaze"
+parent = "head"
+pos = [0.0, 26.0]
+length = 18.0
+
+# The eyes sit 20 units above the gaze pivot, which puts them back at their
+# authored position (108, 92) and (148, 92).
+[[bone]]
+name = "eye_l"
+parent = "gaze"
+pos = [-20.0, -20.0]
+length = 12.0
+
+[[bone]]
+name = "eye_r"
+parent = "gaze"
+pos = [20.0, -20.0]
+length = 12.0
+
+# The internal light. Nothing is parented to it; the gradients follow it.
+[[bone]]
+name = "light"
+parent = "body"
+pos = [-12.0, 16.0]
+length = 10.0
+
+# Tail bones point along their own +x, rotated to hang downwards.
+[[bone]]
+name = "tail1"
+parent = "body"
+pos = [0.0, 60.0]
+rot = 90.0
+length = 26.0
+
+[[bone]]
+name = "tail2"
+parent = "tail1"
+pos = [26.0, 0.0]
+length = 22.0
+
+[[bone]]
+name = "tail3"
+parent = "tail2"
+pos = [22.0, 0.0]
+length = 22.0
+
+# --- artwork -----------------------------------------------------------------
+# Drawn back to front by `z`.
+
+# The bloom. Bound to `root` rather than `body` so it stays put while she leans
+# — a small parallax that makes the glass read as being in front of the glow.
+[[shape]]
+name = "aura"
+z = 0
+silhouette = false
+path = "M 128 8 L 186 44 L 226 106 L 218 172 L 168 226 L 128 248 L 88 226 L 38 172 L 30 106 L 70 44 Z"
+bind = "root"
+fill = { gradient = "aura" }
+
+# --- the trailing tail: three angular shards, each smaller than the last -----
+
+[[shape]]
+name = "tail_a"
+z = 6
+opacity = 0.92
+silhouette = true
+path = "M 128 158 L 146 186 L 128 214 L 110 186 Z"
+bind_auto = { bones = ["tail1", "tail2"], falloff = 40.0, power = 2.0 }
+fill = { gradient = "tail_glow" }
+
+[[shape]]
+name = "tail_b"
+z = 7
+opacity = 0.7
+silhouette = true
+path = "M 128 200 L 139 220 L 128 240 L 117 220 Z"
+bind_auto = { bones = ["tail1", "tail2", "tail3"], falloff = 34.0, power = 2.0 }
+fill = { gradient = "tail_glow" }
+
+# The faintest wisp of the trail. Not clickable — it is barely there.
+[[shape]]
+name = "tail_c"
+z = 8
+opacity = 0.45
+silhouette = false
+path = "M 128 230 L 134 242 L 128 254 L 122 242 Z"
+bind_auto = { bones = ["tail2", "tail3"], falloff = 30.0, power = 2.0 }
+fill = { gradient = "tail_glow" }
+
+# --- the shell ---------------------------------------------------------------
+
+# A faceted crystal: pointed at the top and bottom, with the four side corners
+# cut rather than rounded. Fourteen straight edges, no curves anywhere.
+[[shape]]
+name = "shell"
+z = 10
+silhouette = true
+path = """
+M 128 46
+L 166 70 L 176 82
+L 182 112 L 178 128
+L 160 154 L 148 164
+L 128 176
+L 108 164 L 96 154
+L 78 128 L 74 112
+L 80 82 L 90 70
+Z"""
+bind = "body"
+fill = { gradient = "glass_body" }
+
+# The violet heart, glowing through the glass from inside.
+[[shape]]
+name = "core"
+z = 14
+silhouette = false
+path = "M 128 82 L 153 103 L 159 122 L 144 146 L 128 156 L 112 146 L 97 122 L 103 103 Z"
+bind = "body"
+fill = { gradient = "core" }
+
+# The cyan mote. Bound to the light bone, so it physically moves inside her.
+[[shape]]
+name = "spark"
+z = 16
+silhouette = false
+path = "M 116 114 L 127 132 L 116 152 L 105 132 Z"
+bind = "light"
+fill = { gradient = "spark" }
+
+# The lit facet: the plane the upper-left light actually falls on.
+[[shape]]
+name = "facet_light"
+z = 18
+silhouette = false
+path = "M 128 46 L 90 70 L 80 82 L 114 106 Z"
+bind = "body"
+fill = { gradient = "facet_light" }
+
+# ...and the one it does not.
+[[shape]]
+name = "facet_shadow"
+z = 19
+silhouette = false
+path = "M 182 112 L 178 128 L 160 154 L 138 130 Z"
+bind = "body"
+fill = { gradient = "facet_shadow" }
+
+# The specular band, riding the light bone.
+[[shape]]
+name = "sheen"
+z = 20
+opacity = 0.9
+silhouette = false
+path = "M 128 46 L 90 70 L 104 112 L 132 76 Z"
+bind = "body"
+fill = { gradient = "sheen" }
+
+# --- eyes --------------------------------------------------------------------
+# Two cut shards, not circles. `sy` on the eye bones is the blink.
+
+[[shape]]
+name = "eye_l"
+z = 24
+silhouette = false
+path = "M 96 87 L 108 81 L 120 88 L 108 100 Z"
+bind = "eye_l"
+fill = { color = "text" }
+
+[[shape]]
+name = "eye_r"
+z = 24
+silhouette = false
+path = "M 136 88 L 148 81 L 160 87 L 148 100 Z"
+bind = "eye_r"
+fill = { color = "text" }
+
+[[shape]]
+name = "pupil_l"
+z = 25
+silhouette = false
+path = "M 103 88 L 110 84 L 115 90 L 108 97 Z"
+bind = "eye_l"
+fill = { color = "pupil" }
+
+[[shape]]
+name = "pupil_r"
+z = 25
+silhouette = false
+path = "M 142 88 L 149 84 L 154 90 L 147 97 Z"
+bind = "eye_r"
+fill = { color = "pupil" }
+
+# --- the lit edge -------------------------------------------------------------
+# One pixel of gradient border, bright top-left to dark bottom-right. This is
+# the single detail that makes her read as premium at 512px.
+
+[[shape]]
+name = "edge"
+z = 30
+silhouette = false
+path = """
+M 128 46
+L 166 70 L 176 82
+L 182 112 L 178 128
+L 160 154 L 148 164
+L 128 176
+L 108 164 L 96 154
+L 78 128 L 74 112
+L 80 82 L 90 70
+Z"""
+bind = "body"
+stroke = { gradient = "edge_lit", width = 2.6 }
+
+# --- animation layers ---------------------------------------------------------
+# Evaluated in order. The base layer carries where she is and what she is
+# doing; the three additive layers on top are what stop her ever freezing
+# (F70) — she breathes and blinks while she walks.
+
+[[layer]]
+name = "base"
+additive = false
+default_clip = "idle"
+
+[[layer]]
+name = "breathe"
+additive = true
+default_clip = "breathe"
+
+[[layer]]
+name = "blink"
+additive = true
+default_clip = "blink"
+
+[[layer]]
+name = "face"
+additive = true
+default_clip = "expr.neutral"
+
+# --- clips --------------------------------------------------------------------
+# Times are milliseconds, rotations are degrees. No track uses a linear
+# easing: F67's rule is that a linear tween reads as cheap.
+
+[[clip]]
+name = "idle"
+duration_ms = 3800.0
+looping = true
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 1900.0, 3800.0]
+v = [0.0, -5.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "tx"
+t = [0.0, 950.0, 2850.0, 3800.0]
+v = [0.0, 2.2, -2.2, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 1900.0, 3800.0]
+v = [0.0, 1.6, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "tail1"
+channel = "rot"
+t = [0.0, 1900.0, 3800.0]
+v = [0.0, 5.0, 0.0]
+ease = "soft"
+
+# Breathing. Volume-preserving: she widens as she flattens.
+[[clip]]
+name = "breathe"
+duration_ms = 3200.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "body"
+channel = "sx"
+t = [0.0, 1600.0, 3200.0]
+v = [1.0, 1.022, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sy"
+t = [0.0, 1600.0, 3200.0]
+v = [1.0, 0.985, 1.0]
+ease = "soft"
+
+# Blinking. Long hold, fast close, fast open.
+[[clip]]
+name = "blink"
+duration_ms = 5200.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 4600.0, 4720.0, 4860.0, 5200.0]
+v = [1.0, 1.0, 0.08, 1.0, 1.0]
+ease = ["soft", "out", "out", "out", "soft"]
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 4600.0, 4720.0, 4860.0, 5200.0]
+v = [1.0, 1.0, 0.08, 1.0, 1.0]
+ease = ["soft", "out", "out", "out", "soft"]
+
+# Walking: a bounce, with the squash landing on the low point and the stretch
+# on the rise.
+[[clip]]
+name = "walk"
+duration_ms = 900.0
+looping = true
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 225.0, 450.0, 675.0, 900.0]
+v = [0.0, -7.0, 0.0, -7.0, 0.0]
+ease = ["out", "soft", "out", "soft", "soft"]
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 225.0, 450.0, 675.0, 900.0]
+v = [0.0, -3.0, 0.0, 3.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sx"
+t = [0.0, 225.0, 450.0, 675.0, 900.0]
+v = [1.0, 0.97, 1.03, 0.97, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sy"
+t = [0.0, 225.0, 450.0, 675.0, 900.0]
+v = [1.0, 1.03, 0.97, 1.03, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "tail1"
+channel = "rot"
+t = [0.0, 450.0, 900.0]
+v = [-8.0, 8.0, -8.0]
+ease = "soft"
+
+# A hop: anticipate down, launch, stretch, land, settle on a spring.
+[[clip]]
+name = "hop"
+duration_ms = 620.0
+looping = false
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 120.0, 320.0, 520.0, 620.0]
+v = [0.0, 6.0, -34.0, 2.0, 0.0]
+ease = ["soft", "out", "soft", "spring", "soft"]
+
+[[clip.track]]
+bone = "body"
+channel = "sy"
+t = [0.0, 120.0, 320.0, 520.0, 620.0]
+v = [1.0, 0.86, 1.14, 0.9, 1.0]
+ease = ["soft", "out", "soft", "spring", "soft"]
+
+[[clip.track]]
+bone = "body"
+channel = "sx"
+t = [0.0, 120.0, 320.0, 520.0, 620.0]
+v = [1.0, 1.14, 0.9, 1.1, 1.0]
+ease = ["soft", "out", "soft", "spring", "soft"]
+
+[[clip.track]]
+bone = "tail1"
+channel = "rot"
+t = [0.0, 320.0, 620.0]
+v = [0.0, -22.0, 0.0]
+ease = "out"
+
+# Asleep: she sinks, tilts, curls, and dims. Eyes shut with a step so there is
+# no half-lidded frame in the loop.
+[[clip]]
+name = "sleep"
+duration_ms = 5200.0
+looping = true
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 2600.0, 5200.0]
+v = [10.0, 16.0, 10.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 2600.0, 5200.0]
+v = [-8.0, -6.0, -8.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sy"
+t = [0.0, 2600.0, 5200.0]
+v = [0.9, 0.86, 0.9]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sx"
+t = [0.0, 2600.0, 5200.0]
+v = [1.06, 1.1, 1.06]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 5200.0]
+v = [0.06, 0.06]
+ease = "step"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 5200.0]
+v = [0.06, 0.06]
+ease = "step"
+
+[[clip.track]]
+bone = "light"
+channel = "alpha"
+t = [0.0, 2600.0, 5200.0]
+v = [0.5, 0.32, 0.5]
+ease = "soft"
+
+[[clip.track]]
+bone = "tail1"
+channel = "rot"
+t = [0.0, 2600.0, 5200.0]
+v = [16.0, 12.0, 16.0]
+ease = "soft"
+
+# Thrown: flailing, out of control, tail whipping a beat behind the body.
+[[clip]]
+name = "thrown"
+duration_ms = 700.0
+looping = true
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 175.0, 350.0, 525.0, 700.0]
+v = [-26.0, 22.0, -20.0, 18.0, -26.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sy"
+t = [0.0, 350.0, 700.0]
+v = [1.16, 0.9, 1.16]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sx"
+t = [0.0, 350.0, 700.0]
+v = [0.9, 1.12, 0.9]
+ease = "soft"
+
+[[clip.track]]
+bone = "tail1"
+channel = "rot"
+t = [0.0, 175.0, 350.0, 525.0, 700.0]
+v = [30.0, -26.0, 24.0, -20.0, 30.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "tail2"
+channel = "rot"
+t = [0.0, 175.0, 350.0, 525.0, 700.0]
+v = [-24.0, 26.0, -20.0, 22.0, -24.0]
+ease = "soft"
+
+# Being petted: she leans into it and her eyes narrow.
+[[clip]]
+name = "pet"
+duration_ms = 1400.0
+looping = true
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 700.0, 1400.0]
+v = [0.0, 4.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 700.0, 1400.0]
+v = [0.0, -7.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sy"
+t = [0.0, 700.0, 1400.0]
+v = [1.0, 0.94, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sx"
+t = [0.0, 700.0, 1400.0]
+v = [1.0, 1.05, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 700.0, 1400.0]
+v = [1.0, 0.35, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 700.0, 1400.0]
+v = [1.0, 0.35, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "tail1"
+channel = "rot"
+t = [0.0, 700.0, 1400.0]
+v = [0.0, 14.0, 0.0]
+ease = "soft"
+
+# --- expression clips (F74) ----------------------------------------------------
+# All additive, all on the `face` layer, so an expression rides whatever she is
+# doing rather than replacing it.
+
+[[clip]]
+name = "expr.neutral"
+duration_ms = 1000.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 1000.0]
+v = [1.0, 1.0]
+ease = "soft"
+
+[[clip]]
+name = "expr.curious"
+duration_ms = 2400.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "head"
+channel = "rot"
+t = [0.0, 1200.0, 2400.0]
+v = [0.0, 7.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 1200.0, 2400.0]
+v = [1.0, 1.14, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 1200.0, 2400.0]
+v = [1.0, 1.14, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 1200.0, 2400.0]
+v = [0.0, 3.0, 0.0]
+ease = "soft"
+
+[[clip]]
+name = "expr.delighted"
+duration_ms = 1200.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 300.0, 600.0, 900.0, 1200.0]
+v = [0.0, -6.0, 0.0, -4.0, 0.0]
+ease = ["spring", "soft", "spring", "soft", "soft"]
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 600.0, 1200.0]
+v = [1.0, 0.55, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 600.0, 1200.0]
+v = [1.0, 0.55, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "sx"
+t = [0.0, 600.0, 1200.0]
+v = [1.0, 1.05, 1.0]
+ease = "soft"
+
+# Smug: one eye narrower than the other, head tipped away.
+[[clip]]
+name = "expr.smug"
+duration_ms = 2000.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 1000.0, 2000.0]
+v = [0.0, -5.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "head"
+channel = "rot"
+t = [0.0, 1000.0, 2000.0]
+v = [0.0, -4.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 1000.0, 2000.0]
+v = [1.0, 0.5, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 1000.0, 2000.0]
+v = [1.0, 0.78, 1.0]
+ease = "soft"
+
+[[clip]]
+name = "expr.worried"
+duration_ms = 1800.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "body"
+channel = "tx"
+t = [0.0, 450.0, 900.0, 1350.0, 1800.0]
+v = [0.0, -2.5, 0.0, 2.5, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "head"
+channel = "rot"
+t = [0.0, 900.0, 1800.0]
+v = [0.0, -3.0, 0.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 900.0, 1800.0]
+v = [1.0, 1.1, 1.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 900.0, 1800.0]
+v = [1.0, 1.1, 1.0]
+ease = "soft"
+
+[[clip]]
+name = "expr.bored"
+duration_ms = 3400.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 1700.0, 3400.0]
+v = [0.6, 0.5, 0.6]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 1700.0, 3400.0]
+v = [0.6, 0.5, 0.6]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "rot"
+t = [0.0, 1700.0, 3400.0]
+v = [3.0, 5.0, 3.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 1700.0, 3400.0]
+v = [2.0, 5.0, 2.0]
+ease = "soft"
+
+[[clip]]
+name = "expr.sleepy"
+duration_ms = 4200.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 2100.0, 4200.0]
+v = [0.3, 0.16, 0.3]
+ease = "soft"
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 2100.0, 4200.0]
+v = [0.3, 0.16, 0.3]
+ease = "soft"
+
+[[clip.track]]
+bone = "head"
+channel = "rot"
+t = [0.0, 2100.0, 4200.0]
+v = [2.0, 5.0, 2.0]
+ease = "soft"
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 2100.0, 4200.0]
+v = [3.0, 7.0, 3.0]
+ease = "soft"
+
+# Alarmed: a hard start upwards, eyes wide, then held tense rather than
+# relaxing — she is still worried when the clip loops.
+[[clip]]
+name = "expr.alarmed"
+duration_ms = 700.0
+looping = true
+additive = true
+
+[[clip.track]]
+bone = "body"
+channel = "ty"
+t = [0.0, 120.0, 700.0]
+v = [0.0, -9.0, -5.0]
+ease = ["out", "spring", "soft"]
+
+[[clip.track]]
+bone = "eye_l"
+channel = "sy"
+t = [0.0, 120.0, 700.0]
+v = [1.0, 1.42, 1.3]
+ease = ["out", "spring", "soft"]
+
+[[clip.track]]
+bone = "eye_r"
+channel = "sy"
+t = [0.0, 120.0, 700.0]
+v = [1.0, 1.42, 1.3]
+ease = ["out", "spring", "soft"]
+
+[[clip.track]]
+bone = "body"
+channel = "sy"
+t = [0.0, 120.0, 700.0]
+v = [1.0, 1.1, 1.04]
+ease = ["out", "spring", "soft"]
+
+# --- expressions (F74) ---------------------------------------------------------
+
+[[expression]]
+name = "neutral"
+clip = "expr.neutral"
+layer = "face"
+fade_ms = 200.0
+
+[[expression]]
+name = "curious"
+clip = "expr.curious"
+layer = "face"
+fade_ms = 180.0
+
+[[expression]]
+name = "delighted"
+clip = "expr.delighted"
+layer = "face"
+fade_ms = 140.0
+
+[[expression]]
+name = "smug"
+clip = "expr.smug"
+layer = "face"
+fade_ms = 200.0
+
+[[expression]]
+name = "worried"
+clip = "expr.worried"
+layer = "face"
+fade_ms = 180.0
+
+[[expression]]
+name = "bored"
+clip = "expr.bored"
+layer = "face"
+fade_ms = 320.0
+
+[[expression]]
+name = "sleepy"
+clip = "expr.sleepy"
+layer = "face"
+fade_ms = 320.0
+
+[[expression]]
+name = "alarmed"
+clip = "expr.alarmed"
+layer = "face"
+fade_ms = 90.0
+
+# --- constraints ----------------------------------------------------------------
+
+# F69: her eyes track the cursor. A narrow cone, because a mote of glass that
+# swivels 90 degrees reads as a turret, not as attention.
+[[ik]]
+name = "gaze"
+kind = "look_at"
+bone = "gaze"
+target = "cursor"
+forward = [0.0, -1.0]
+max_deg = 18.0
+weight = 0.85
+
+# Available for scripted reaching — wrapping the tail round a window edge
+# (F68). Nothing drives it by default, so the spring chain below owns the tail.
+[[ik]]
+name = "tail_reach"
+kind = "two_bone"
+root = "tail1"
+mid = "tail2"
+end = "tail3"
+target = "none"
+bend_positive = true
+
+# F67's secondary motion: the tail arrives late and keeps going after she
+# stops. Light and draggy, because a wisp-trail is nearly weightless.
+[[chain]]
+name = "tail"
+bones = ["tail1", "tail2", "tail3"]
+stiffness = 130.0
+damping = 15.0
+mass = 1.0
+gravity = 40.0
+drag = 1.4
+stiff_length = 1.0

@@ -3,3 +3,13 @@ name = "wisp-rig"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Skeletal 2D rig, mesh deform, IK, clip playback and the NX Wisp skin format."
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.1"
+thiserror = "2.0"
+
+[dev-dependencies]
+tempfile = "3.23"
