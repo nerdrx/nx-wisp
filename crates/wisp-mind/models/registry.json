@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "note": "F55. Models are not in the AppImage. Every entry pins a URL *and* a SHA-256 *and* a size; SPEC §0.2a permits network egress for exactly this and nothing else. The hash is the security boundary — redirects to a CDN are fine because a mirror that serves different bytes fails verification and the file is deleted rather than moved into place.",
+  "models": [
+    {
+      "name": "qwen3-1.7b-q4km",
+      "role": "reflex",
+      "file": "Qwen3-1.7B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf",
+      "sha256": "b139949c5bd74937ad8ed8c8cf3d9ffb1e99c866c823204dc42c0d91fa181897",
+      "size_bytes": 1107409472,
+      "vram_mib": 1600,
+      "context_max": 32768,
+      "chat_template": "chatml",
+      "license": "apache-2.0",
+      "default": true,
+      "notes": "Always resident while she may hold a model at all. Routing, classification, one-liners, and the escalation decision."
+    },
+    {
+      "name": "qwen3-30b-a3b-q4km",
+      "role": "deliberate",
+      "file": "Qwen3-30B-A3B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/unsloth/Qwen3-30B-A3B-GGUF/resolve/main/Qwen3-30B-A3B-Q4_K_M.gguf",
+      "sha256": "9f1a24700a339b09c06009b729b5c809e0b64c213b8af5b711b3dbdfd0c5ba48",
+      "size_bytes": 18556686912,
+      "vram_mib": 18400,
+      "context_max": 32768,
+      "chat_template": "chatml",
+      "license": "apache-2.0",
+      "default": true,
+      "notes": "MoE: 30B quality at roughly 3B speed. The first thing evicted at T2, and the reason warm eviction exists — an 18 GiB cold load is half a minute."
+    },
+    {
+      "name": "qwen3-embedding-0.6b-q8",
+      "role": "embed",
+      "file": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/main/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+      "size_bytes": 639150592,
+      "vram_mib": 900,
+      "context_max": 32768,
+      "embedding_dim": 1024,
+      "license": "apache-2.0",
+      "default": true,
+      "notes": "F18's embedder. Without it memory falls back to HashEmbedder, which is lexical but not useless."
+    },
+    {
+      "name": "smollm2-135m-q4km",
+      "role": "reflex",
+      "file": "SmolLM2-135M-Instruct-Q4_K_M.gguf",
+      "url": "https://huggingface.co/unsloth/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf",
+      "sha256": "ed5fa30c487b282ec156c29062f1222e5c20875a944ac98289dbd242e947f747",
+      "size_bytes": 105454144,
+      "vram_mib": 320,
+      "context_max": 8192,
+      "chat_template": "chatml",
+      "license": "apache-2.0",
+      "default": false,
+      "notes": "100 MB. Not a model she is meant to think with — it exists so the llama.cpp path can be exercised end to end on a laptop, in a container, or by NX_WISP_LLAMA_SMOKE, without a 18 GiB download."
+    }
+  ]
+}

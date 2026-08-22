@@ -3,3 +3,66 @@ name = "wisp-mind"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Cognition: llama.cpp backends, GBNF grammars, memory + embeddings, the tool registry and the mood FSM."
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+wisp-gov = { path = "../wisp-gov" }
+# SPEC §2 gives `wisp-mind` "proto, gov". The tool descriptor type it is told to
+# register lives in `wisp-fleet`, so this edge exists deliberately and is
+# reported as a spec gap rather than worked around by cloning the type.
+wisp-fleet = { path = "../wisp-fleet" }
+
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+tokio = { version = "1.53.1", features = [
+    "rt",
+    "sync",
+    "time",
+    "macros",
+    "fs",
+    "process",
+    "io-util",
+] }
+tracing = "0.1.44"
+thiserror = "2.0.20"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+sha2 = "0.10.9"
+
+# The one network dependency, and the only one this crate is allowed to have
+# (SPEC §0.2a: pinned URLs, pinned hashes, nothing else).
+ureq = { version = "3.4.0", default-features = false, features = [
+    "rustls",
+], optional = true }
+
+# The real inference backend. Off by default: `cargo test -p wisp-mind` must
+# pass on a machine with no GPU, no Vulkan loader and no model, and building
+# llama.cpp is neither of those things.
+#
+# `common` is **not optional**, whatever it looks like. It is the layer that
+# catches C++ exceptions at the FFI boundary; without it a grammar violation
+# unwinds a `std::runtime_error` through a Rust frame and the process aborts —
+# which is not something a desktop companion gets to do to somebody's session.
+# `openmp` is deliberately off: it would put a libgomp dependency in the
+# AppImage for a threading model llama.cpp does not need here.
+llama-cpp-2 = { version = "0.1.154", default-features = false, features = [
+    "common",
+], optional = true }
+
+[features]
+default = ["download"]
+# F55's fetcher. Without it the registry still parses and verifies, it just
+# cannot pull bytes.
+download = ["dep:ureq"]
+# F12's real backend.
+llama = ["dep:llama-cpp-2"]
+# What actually ships: llama.cpp built with -DGGML_VULKAN=ON. There is no ROCm
+# on the target machine and there never will be (SPEC §1, plan §0).
+vulkan = ["llama", "llama-cpp-2/vulkan"]
+
+[dev-dependencies]
+tempfile = "3.27.0"
+tokio = { version = "1.53.1", features = ["rt-multi-thread", "test-util"] }
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
