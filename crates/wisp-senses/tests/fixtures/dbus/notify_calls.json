@@ -1,0 +1,33 @@
+[
+  {
+    "app_name": "Thunderbird", "replaces_id": 0, "app_icon": "thunderbird",
+    "summary": "New message",
+    "body": "nerdrx — NX Hub release build failed",
+    "actions": ["default", "Open"], "expire_timeout": -1, "urgency": 1, "transient": false
+  },
+  {
+    "app_name": "plasmashell", "replaces_id": 0, "app_icon": "audio-volume-high",
+    "summary": "Volume", "body": "60%",
+    "actions": [], "expire_timeout": 2000, "urgency": 0, "transient": true
+  },
+  {
+    "app_name": "Discord", "replaces_id": 0, "app_icon": "discord",
+    "summary": "#nx-dev", "body": "someone: did the wisp land yet",
+    "actions": [], "expire_timeout": -1, "urgency": 1, "transient": false
+  },
+  {
+    "app_name": "nx-wisp", "replaces_id": 0, "app_icon": "nx-wisp",
+    "summary": "she said something", "body": "which she must not then react to",
+    "actions": [], "expire_timeout": -1, "urgency": 1, "transient": false
+  },
+  {
+    "app_name": "Dolphin", "replaces_id": 91, "app_icon": "dolphin",
+    "summary": "Copying", "body": "42% — 3 of 7 files",
+    "actions": [], "expire_timeout": -1, "urgency": 1, "transient": false
+  },
+  {
+    "app_name": "Dolphin", "replaces_id": 91, "app_icon": "dolphin",
+    "summary": "Copying", "body": "42% — 3 of 7 files",
+    "actions": [], "expire_timeout": -1, "urgency": 1, "transient": false
+  }
+]

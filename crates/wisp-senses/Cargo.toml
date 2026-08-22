@@ -3,3 +3,42 @@ name = "wisp-senses"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "NX Wisp senses: KWin script terrain, idle, MPRIS, PipeWire, notifications, clipboard, vitals, files, and the consent layer."
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+tokio = { version = "1.47.1", features = ["rt-multi-thread", "sync", "time", "macros", "fs", "process"] }
+futures-util = "0.3.31"
+tracing = "0.1.41"
+anyhow = "1.0.100"
+thiserror = "2.0.17"
+
+zbus = { version = "5.11.0", default-features = false, features = ["tokio"] }
+
+wayland-client = "0.31.11"
+wayland-protocols = { version = "0.32.9", features = ["client", "staging"] }
+
+inotify = "0.11.0"
+libc = "0.2.176"
+
+[dev-dependencies]
+tempfile = "3.23.0"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+
+[features]
+default = ["pipewire-backend"]
+# The live PipeWire backend links libpipewire-0.3 and needs libclang at build
+# time. PipeWire is part of the hard target (SPEC §1) so it is on by default;
+# turning it off leaves the audio sense inert but keeps the rest of the crate,
+# and its pure logic, buildable and testable on a machine without the headers.
+pipewire-backend = ["dep:pipewire"]
+
+[dependencies.pipewire]
+version = "0.10.1"
+optional = true
+
+[[example]]
+name = "smoke"
