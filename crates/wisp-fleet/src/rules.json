@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "notes": [
+    "The authored fleet mapping for NX Wisp (SPEC F45). Copy this file to",
+    "$NX_WISP_CONFIG_DIR/fleet-rules.json (default ~/.config/nx-wisp/) to",
+    "override it wholesale — the override replaces these rules, it does not",
+    "merge with them.",
+    "A rule is {id, app?, field, when, urgency, text, expression?, cooldown_ms?,",
+    "defer_ms?, stale_after_ms?}. Omit `app` (or use \"*\") to match every app on",
+    "the bus; `field` accepts \"*\" too. `when.op` is one of: changed, nonempty,",
+    "is_true, is_false, eq, one_of, above, below, crosses_above, crosses_below,",
+    "rises. `text` substitutes {app} {field} {value} {prev} {delta}.",
+    "urgency is whim | notable | answer | alarm, and alarm is expensive: it is",
+    "free of the attention budget and it breaks flow, so it is reserved for the",
+    "one thing that genuinely cannot wait.",
+    "FIELD NAMES: pulsenx {hr, connected} is live today and declared in NX Hub's",
+    "registry overlay. nx-sentry {armed, tripped, region} and wivrn-nx {session,",
+    "clients} are PROPOSED — neither app joins the bus yet. nx-hub {updates} is",
+    "synthesised locally by wisp-fleet from `nx list --json`, because the hub is",
+    "the bus's server and never one of its clients.",
+    "The `present` field is synthetic: wisp-fleet emits it when an app appears on",
+    "or vanishes from the bus."
+  ],
+  "apps": {
+    "nx-sentry": { "name": "NX Sentry", "notes": "screen-region motion alarm" },
+    "nx-hub": { "name": "NX Hub", "notes": "installer, updater and the bus itself" },
+    "pulsenx": { "name": "PulseNX", "notes": "heart rate from the watch bridge" },
+    "wivrn-nx": { "name": "WiVRn NX", "notes": "VR streaming server" },
+    "nxtakt": { "name": "NxTakt" },
+    "nx-orbit": { "name": "NX Orbit" },
+    "quadforge": { "name": "QuadForge" }
+  },
+  "rules": [
+    {
+      "id": "sentry-tripped",
+      "app": "nx-sentry",
+      "field": "tripped",
+      "when": { "op": "is_true" },
+      "urgency": "alarm",
+      "text": "Something just moved in the region NX Sentry is watching.",
+      "expression": "alarm",
+      "cooldown_ms": 15000,
+      "stale_after_ms": 30000
+    },
+    {
+      "id": "sentry-armed",
+      "app": "nx-sentry",
+      "field": "armed",
+      "when": { "op": "is_true" },
+      "urgency": "whim",
+      "text": "{app} is watching the screen now.",
+      "expression": "watchful",
+      "cooldown_ms": 60000,
+      "stale_after_ms": 20000
+    },
+    {
+      "id": "sentry-stood-down",
+      "app": "nx-sentry",
+      "field": "armed",
+      "when": { "op": "is_false" },
+      "urgency": "whim",
+      "text": "{app} stood down.",
+      "cooldown_ms": 60000,
+      "stale_after_ms": 20000
+    },
+    {
+      "id": "hub-updates",
+      "app": "nx-hub",
+      "field": "updates",
+      "when": { "op": "crosses_above", "value": 0 },
+      "urgency": "notable",
+      "text": "{app} has updates waiting — {value} of your apps.",
+      "expression": "pleased",
+      "cooldown_ms": 21600000,
+      "defer_ms": 5000,
+      "stale_after_ms": 1800000
+    },
+    {
+      "id": "pulse-spike",
+      "app": "pulsenx",
+      "field": "hr",
+      "when": { "op": "rises", "by": 25, "window_ms": 120000 },
+      "urgency": "notable",
+      "text": "Your heart rate just jumped {delta} to {value}.",
+      "expression": "concerned",
+      "cooldown_ms": 300000,
+      "stale_after_ms": 45000
+    },
+    {
+      "id": "pulse-high",
+      "app": "pulsenx",
+      "field": "hr",
+      "when": { "op": "crosses_above", "value": 150 },
+      "urgency": "notable",
+      "text": "That is {value} beats a minute. Are you all right?",
+      "expression": "concerned",
+      "cooldown_ms": 600000,
+      "stale_after_ms": 60000
+    },
+    {
+      "id": "pulse-strap-lost",
+      "app": "pulsenx",
+      "field": "connected",
+      "when": { "op": "is_false" },
+      "urgency": "whim",
+      "text": "{app} lost the watch.",
+      "cooldown_ms": 900000,
+      "stale_after_ms": 30000
+    },
+    {
+      "id": "wivrn-session-start",
+      "app": "wivrn-nx",
+      "field": "session",
+      "when": { "op": "is_true" },
+      "urgency": "notable",
+      "text": "Headset is up — I will get out of your way. Have fun.",
+      "expression": "wave",
+      "cooldown_ms": 30000,
+      "stale_after_ms": 8000
+    },
+    {
+      "id": "wivrn-session-end",
+      "app": "wivrn-nx",
+      "field": "session",
+      "when": { "op": "is_false" },
+      "urgency": "whim",
+      "text": "Welcome back.",
+      "expression": "wave",
+      "cooldown_ms": 30000,
+      "stale_after_ms": 20000
+    },
+    {
+      "id": "any-app-error",
+      "field": "error",
+      "when": { "op": "nonempty" },
+      "urgency": "notable",
+      "text": "{app} is reporting a problem: {value}",
+      "expression": "concerned",
+      "cooldown_ms": 120000,
+      "stale_after_ms": 120000
+    }
+  ]
+}
