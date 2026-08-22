@@ -248,19 +248,39 @@ fn violet_leads_and_cyan_is_only_light_inside_the_material() {
 }
 
 #[test]
-fn she_is_angular_everywhere() {
-    // DESIGN.md §1: angular, never rounded. No pills, no circles. Her artwork
-    // is straight edges only — the whole point of "faceted crystal".
+fn she_is_round_because_she_is_a_creature_and_not_chrome() {
+    // SPEC.md §3.5b. This test used to assert the opposite — that every edge of
+    // her was straight, because DESIGN.md §1 says "angular, never rounded".
+    //
+    // That rule governs *chrome*: bubbles, panels, menus, the rig editor. It was
+    // applied to the character by mistake, and the result was a faceted crystal
+    // that at 96 px — the size she actually is on a desktop — read as a dark
+    // smudge. F73's revised brief makes her a chibi, and a chibi is round by
+    // definition. So the assertion is inverted rather than deleted: her artwork
+    // must *keep* its curves, and the next person to "fix" her to comply with
+    // the geometry rule gets a failing test and this comment.
     let s = wisp();
-    for shape in &s.shapes {
-        for v in &shape.path.verbs {
-            assert!(
-                matches!(v, Verb::Move | Verb::Line | Verb::Close),
-                "shape {:?} uses a curve ({v:?}) — she is faceted, not rounded",
-                shape.name
-            );
-        }
+    let curved = |sh: &wisp_rig::skin::ShapeDef| {
+        sh.path
+            .verbs
+            .iter()
+            .any(|v| matches!(v, Verb::Quad | Verb::Cubic))
+    };
+    for name in ["shell", "hair_back", "hair_front", "body", "eye_l", "eye_r"] {
+        let sh = s
+            .shapes
+            .iter()
+            .find(|sh| &*sh.name == name)
+            .unwrap_or_else(|| panic!("no {name} shape"));
+        assert!(curved(sh), "shape {name:?} has been re-angularised — see SPEC.md §3.5b");
     }
+    // ...and she is round nearly everywhere, not just in those six places.
+    let round = s.shapes.iter().filter(|sh| curved(sh)).count();
+    assert!(
+        round * 4 >= s.shapes.len() * 3,
+        "only {round} of {} shapes carry a curve",
+        s.shapes.len()
+    );
 }
 
 #[test]
