@@ -28,7 +28,7 @@ use wayland_client::{
     protocol::{wl_output, wl_pointer, wl_region, wl_seat, wl_surface},
     Connection, Dispatch, EventQueue, Proxy, QueueHandle,
 };
-use wisp_paint::{Painter, Scene};
+use wisp_paint::{Painter, Scene, TextEngine};
 use wisp_proto::Tier;
 use wisp_rig::{Polygon, RigFrame, Vec2};
 
@@ -42,11 +42,13 @@ pub struct ShellConfig {
     pub size_px: f32,
     /// Head-room around her so a throw or a stretch is not clipped.
     pub padding_px: f32,
+    /// Minimum surface side, so a speech bubble beside her is not clipped.
+    pub bubble_room_px: f32,
 }
 
 impl Default for ShellConfig {
     fn default() -> Self {
-        Self { size_px: 160.0, padding_px: 80.0 }
+        Self { size_px: 160.0, padding_px: 80.0, bubble_room_px: 620.0 }
     }
 }
 
@@ -92,6 +94,7 @@ struct State {
     // out. wgpu first, wl_surface after.
     surface: wgpu::Surface<'static>,
     painter: Painter,
+    text: TextEngine,
     scene: Scene,
     layer: LayerSurface,
 
@@ -124,7 +127,12 @@ impl WispShell {
             CompositorState::bind(&globals, &qh).map_err(|_| ShellError::NoLayerShell)?;
         let layer_shell = LayerShell::bind(&globals, &qh).map_err(|_| ShellError::NoLayerShell)?;
 
-        let side = (cfg.size_px + cfg.padding_px * 2.0).ceil() as u32;
+        // Big enough for her AND a speech bubble on any side of her, because
+        // a bubble that spills past the surface is simply clipped away. Still
+        // two orders of magnitude cheaper than a fullscreen overlay.
+        let side = (cfg.size_px + cfg.padding_px * 2.0)
+            .max(cfg.bubble_room_px)
+            .ceil() as u32;
         let wl_surface = compositor.create_surface(&qh);
         let layer = layer_shell.create_layer_surface(
             &qh,
@@ -209,6 +217,7 @@ impl WispShell {
             pointer: None,
             surface,
             painter,
+            text: TextEngine::new(),
             scene: Scene::new(),
             layer,
             width: side,
@@ -341,6 +350,12 @@ impl WispShell {
         (self.state.width, self.state.height)
     }
 
+    /// Draw calls in the last frame — proof that an overlay actually reached
+    /// the GPU rather than being built and dropped.
+    pub fn last_draw_calls(&self) -> usize {
+        self.state.painter.last_draw_calls()
+    }
+
     pub fn set_tier(&mut self, tier: Tier) {
         use wisp_proto::Governed;
         self.state.painter.set_tier(tier, &wisp_proto::TierReason::Idle);
@@ -348,12 +363,25 @@ impl WispShell {
 
     /// Draw one posed frame and install its silhouette as the input region.
     pub fn draw(&mut self, frame: &RigFrame, outline: &Polygon) {
+        self.draw_with(frame, outline, |_, _, _| {});
+    }
+
+    /// As [`draw`], plus a hook to append commands after her — speech bubbles
+    /// and the invasive-sense tell. The closure gets the painter (for text
+    /// rasterisation) and the scene, which is why it is a callback rather than
+    /// a `&Scene` argument: both live inside the shell.
+    pub fn draw_with(
+        &mut self,
+        frame: &RigFrame,
+        outline: &Polygon,
+        overlay: impl FnOnce(&Painter, &mut TextEngine, &mut Scene),
+    ) {
         if !self.state.configured {
             return;
         }
         let qh = self.queue.handle();
         self.state.install_region(&qh, outline);
-        self.state.render(frame);
+        self.state.render_with(frame, overlay);
         self.state
             .layer
             .wl_surface()
@@ -494,7 +522,11 @@ impl State {
         set_input_region(&self.compositor, qh, self.layer.wl_surface(), poly, 1.0);
     }
 
-    fn render(&mut self, frame: &RigFrame) {
+    fn render_with(
+        &mut self,
+        frame: &RigFrame,
+        overlay: impl FnOnce(&Painter, &mut TextEngine, &mut Scene),
+    ) {
         use wgpu::CurrentSurfaceTexture as Cst;
         let tex = match self.surface.get_current_texture() {
             Cst::Success(t) | Cst::Suboptimal(t) => t,
@@ -504,6 +536,9 @@ impl State {
             }
         };
         crate::bridge::scene_of(frame, &mut self.scene);
+        // Split borrows: the painter is read while the scene and text engine
+        // are written. Distinct fields, so this is fine.
+        overlay(&self.painter, &mut self.text, &mut self.scene);
         let view = tex.texture.create_view(&Default::default());
         if let Err(e) =
             self.painter.render_to_view(&view, self.width, self.height, &self.scene)

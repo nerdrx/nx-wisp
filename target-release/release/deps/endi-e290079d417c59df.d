@@ -1,0 +1,10 @@
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/endi-e290079d417c59df.d: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/endian.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/io.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/../README.md
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libendi-e290079d417c59df.rlib: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/endian.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/io.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/../README.md
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libendi-e290079d417c59df.rmeta: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/endian.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/io.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/../README.md
+
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/lib.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/endian.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/io.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/endi-1.1.1/src/../README.md:

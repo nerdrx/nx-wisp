@@ -4,20 +4,96 @@
   Tray variant. DESIGN.md §8 makes all three variants mandatory, so it exists
   even though NX Wisp has no tray icon today — she IS the visible surface, and
   a layer-shell creature has nowhere to minimise to. If a tray tell is ever
-  added for SPEC §0.3 (mic/clipboard/screen live), this is the file.
+  added for SPEC §0.3 (mic / clipboard / screen live), this is the file.
 
-  Flat brand violet, everything else knocked out with fill-rule="evenodd" so
-  the eyes and the mote are holes rather than painted shapes. That is what
-  survives an OS tinting the icon monochrome on a light or a dark tray: there
-  is exactly one filled region and no second colour to lose.
+  Flat brand violet, one fill, the eyes knocked out with fill-rule="evenodd" so
+  they are holes rather than painted shapes. That is what survives an OS
+  tinting the icon monochrome on a light or a dark tray: there is exactly one
+  filled region and no second colour to lose. It was checked in both
+  polarities — white-on-dark and black-on-light — at 22 and 32 px.
 
-  Geometry is the small variant's — wider crystal, no edge, no facets.
+  ### Here, and only here, the trail is the point
+
+  The master has to fight the trail (see icon.svg's w-trail note: a hard-edged
+  taper under a circle is a map pin) and the small variant drops it outright.
+  This file can do neither, because a flat monochrome glyph *is* its
+  silhouette — there is no glass, no fire, no iris and no halo left to say who
+  she is. Round mass, trail, two big eyes, and nothing else.
+
+  Which means the pin read has to be beaten by shape alone. Five silhouettes
+  were drawn and rendered at 22 px before this one:
+
+    - the master's trail traced flat — a map pin, unambiguously;
+    - the same widened — still a pin, just a fatter one;
+    - the round mass with the three motes and no trail at all — clean, but it
+      is a face with two dots under it and not a wisp;
+    - the trail swept sideways like a comet — a **speech bubble**, which is a
+      far worse thing for a tray icon to be than a pin;
+    - and this one.
+
+  What works is drawing her silhouette as what it actually is at this size:
+  **the union of the round mass and the trail**, not a mass with a spike bolted
+  under it. Three properties carry it:
+
+    1. **The trail is fat** — 141 px across at its widest against her 344 px
+       width, 41%, against the skin's own 34%. Wider than she really is on
+       purpose: draw it any narrower and the shoulder where it meets the mass
+       becomes a neck, and a round head on a neck above a taper is a pin. It
+       also has to clear 3 px at a 22 px tray on its own, with no glow, no
+       gradient and no motes helping it.
+    2. **It ends in a lobe, not a point.** The bottom is a rounded 100 px curve
+       centred on (290, 490). A pin comes to a point; this does not, at any
+       size, and that alone kills most of the read.
+    3. **It leans, and keeps leaning.** Its centreline is at x=260 where it
+       leaves the mass and x=290 at the bottom. A pin is bilaterally symmetric;
+       nothing that leans consistently reads as one.
+
+  The three motes are dropped. At a 22 px tray they are single stray pixels,
+  and next to a tail the lowest of them reads as the dot under a pin rather
+  than as light shed off her — tested, and it made the glyph worse.
+
+  ### Geometry
+
+  A circle at (256, 196) r=172, with the trail traced into the *same subpath*
+  so the union is one continuous outline: no seam where they meet, and no
+  chance of the winding trap the skin file warns about (two overlapping shapes
+  wound opposite ways cancel to a hole). If you redraw the trail, keep its two
+  ends exactly on the circle — (352, 338.7) and (168, 343.8) both satisfy
+  x'^2 + y'^2 = 172^2 about the centre — because that is what makes the join
+  invisible.
+
+  The eyes are 30% of her width each at a 72% span, wider than icon.svg's 70%
+  and much wider than the skin's 64%: a knocked-out hole loses a little to
+  antialiasing at every size, and a tray icon has no second tone to recover it
+  with. At 22 px each eye is 4.5 px, which is the one measurement in this file
+  with real headroom, and it is deliberately the one thing that cannot fail —
+  two eyes are what stop the glyph being read as an object rather than as a
+  creature.
+
+  The *gap* between them is the number that actually needed tuning. At the
+  first spacing it was 25 units, which is 1.1 px at a 22 px tray and 0.8 px at
+  16; the two holes bled into one slot and she read as a visor. It is 40 units
+  now — 1.7 px at 22 — and they stay separate. If you widen the eyes again,
+  widen the gap with them.
 -->
   <path fill="#7700ff" fill-rule="evenodd"
-        d="M 256 15 L 410.7 103.8 L 451.4 148.2 L 475.8 259.2 L 459.5 318.4
-           L 386.2 414.6 L 337.4 451.6 L 256 496 L 174.6 451.6 L 125.8 414.6
-           L 52.5 318.4 L 36.2 259.2 L 60.6 148.2 L 101.3 103.8 Z
-           M 117 171.4 L 174.6 145.2 L 232.2 175.7 L 174.6 228.1 Z
-           M 279.8 175.7 L 337.4 145.2 L 395 171.4 L 337.4 228.1 Z
-           M 141.6 278 L 174.6 330 L 141.6 382 L 108.6 330 Z"/>
+        d="M 352 338.7
+           C 368 384 362 426 338 458
+           C 324 476 308 486 290 490
+           C 270 486 252 476 238 458
+           C 214 426 176 386 168 343.8
+           A 172 172 0 1 1 352 338.7
+           Z
+           M 184 145.5
+           C 212.7 145.5 236 173 236 207
+           C 236 241 212.7 268.5 184 268.5
+           C 155.3 268.5 132 241 132 207
+           C 132 173 155.3 145.5 184 145.5
+           Z
+           M 328 145.5
+           C 356.7 145.5 380 173 380 207
+           C 380 241 356.7 268.5 328 268.5
+           C 299.3 268.5 276 241 276 207
+           C 276 173 299.3 145.5 328 145.5
+           Z"/>
 </svg>

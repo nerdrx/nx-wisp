@@ -1,0 +1,10 @@
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/log-78ab09bbb5fcd0a3.d: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/macros.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/serde.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/__private_api.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/liblog-78ab09bbb5fcd0a3.rlib: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/macros.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/serde.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/__private_api.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/liblog-78ab09bbb5fcd0a3.rmeta: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/macros.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/serde.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/__private_api.rs
+
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/lib.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/macros.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/serde.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/log-0.4.33/src/__private_api.rs:

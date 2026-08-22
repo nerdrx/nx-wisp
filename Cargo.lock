@@ -2703,6 +2703,7 @@ dependencies = [
  "wisp-attn",
  "wisp-fleet",
  "wisp-gov",
+ "wisp-paint",
  "wisp-proto",
  "wisp-rig",
  "wisp-senses",

@@ -21,6 +21,7 @@ wisp-attn   = { path = "../wisp-attn" }
 wisp-fleet  = { path = "../wisp-fleet" }
 wisp-rig    = { path = "../wisp-rig" }
 wisp-shell  = { path = "../wisp-shell" }
+wisp-paint  = { path = "../wisp-paint" }
 
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"

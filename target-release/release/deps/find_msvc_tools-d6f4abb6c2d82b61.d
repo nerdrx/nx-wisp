@@ -1,0 +1,9 @@
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/find_msvc_tools-d6f4abb6c2d82b61.d: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/find_tools.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/tool.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libfind_msvc_tools-d6f4abb6c2d82b61.rlib: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/find_tools.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/tool.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libfind_msvc_tools-d6f4abb6c2d82b61.rmeta: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/find_tools.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/tool.rs
+
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/lib.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/find_tools.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/find-msvc-tools-0.1.11/src/tool.rs:

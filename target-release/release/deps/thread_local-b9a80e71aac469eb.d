@@ -1,0 +1,9 @@
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/thread_local-b9a80e71aac469eb.d: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/cached.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/thread_id.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libthread_local-b9a80e71aac469eb.rlib: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/cached.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/thread_id.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libthread_local-b9a80e71aac469eb.rmeta: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/cached.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/thread_id.rs
+
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/lib.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/cached.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thread_local-1.1.10/src/thread_id.rs:

@@ -1,0 +1,10 @@
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/cexpr-745f3794fbb768a1.d: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/expr.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/literal.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/token.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libcexpr-745f3794fbb768a1.rlib: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/expr.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/literal.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/token.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libcexpr-745f3794fbb768a1.rmeta: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/expr.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/literal.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/token.rs
+
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/lib.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/expr.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/literal.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cexpr-0.6.0/src/token.rs:

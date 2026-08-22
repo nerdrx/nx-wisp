@@ -1,0 +1,9 @@
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/event_listener-3f0c189954527a08.d: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/intrusive.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/notify.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libevent_listener-3f0c189954527a08.rlib: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/intrusive.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/notify.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libevent_listener-3f0c189954527a08.rmeta: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/intrusive.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/notify.rs
+
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/lib.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/intrusive.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/event-listener-5.4.2/src/notify.rs:

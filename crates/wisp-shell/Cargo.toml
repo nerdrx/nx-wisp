@@ -16,3 +16,6 @@ wgpu = "30.0"
 pollster = "1.0"
 tracing = "0.1"
 thiserror = "2"
+
+[dev-dependencies]
+wisp-proto = { path = "../wisp-proto" }

@@ -4,27 +4,70 @@
   Small-size variant of the NX Wisp mark. Source for the 16, 24 and 32 px
   rasters only; icon.svg is NOT used below 48px (DESIGN.md §8).
 
-  Five things in the master collapse at these sizes and are dropped here:
+  At 16 px she is twelve pixels of violet. Exactly three things fit in that,
+  and they are the top three of the skin file's own survives-the-shrink list:
 
-    - the two facets and the sheen (three tonal zones inside a 16px tile leave
-      the eyes nothing to sit against),
-    - the 10-unit lit edge (it lands on one pixel and only greys the rim),
-    - the aura (a violet haze around a 16px tile reads as dirt, not as light),
-    - the core's soft falloff, replaced by one flat diagonal ramp,
-    - the pupils and their catchlights (three tones inside a 3px eye is one
-      grey dot; a solid near-white shard is an eye).
+      1. a round mass of violet glass,
+      2. two big cyan eyes sitting directly in it,
+      3. cyan fire inside the glass, low and off to the left.
 
-  What is left is a solid lit crystal, two flat eyes and one hot cyan mote.
-  The crystal is also drawn 10% wider than the master's — with no edge and no
-  bloom carrying the silhouette, the tile can afford to spend more of the
-  raster on itself, and that is what makes 16px legible at all. Same trick,
-  same reason, as nx-hub's assets/icon-small.svg.
+  Everything else in the master is dropped, and each of these was checked at
+  16 px on a dark tray and on a light one before it went:
 
-  The body ramp is nx-hub's small-variant ramp verbatim, so every NX app reads
-  as one family in a 16px menu.
+    - **the trail and all five motes.** This is the important one. The master's
+      plume is 100 px of a 512 canvas; at 16 px that is three pixels of haze
+      under a circle, and three pixels of haze under a circle is a map pin.
+      The character designer hit the pin read at sprite scale and fixed it by
+      curving and dissolving the trail — neither of which exists at 16 px,
+      because there is nothing to curve *in*. So she is the round mass alone
+      here, which is the shape the skin calls the biggest lever it has, and the
+      one that survives being small because a circle at 12 px is still a
+      circle.
+    - **the halo and the aura.** A violet haze around a 16 px tile reads as
+      dirt, not as light. On a light tray it reads as a smudge under the icon.
+    - **the lit edge.** A 7 px stroke lands on a third of a pixel and only
+      greys the rim; the silhouette is carried by the fill instead, which is
+      why the mass is drawn much larger here (see below).
+    - **the four-value glass, the depth wash, the sheen and the specular
+      band.** Four tonal zones inside a 12 px disc average to one flat violet
+      and leave the eyes nothing to sit against. One ramp plus one soft cap of
+      light is what is left, and the cap is what stops her being a flat disc at
+      32.
+    - **the pupils, both catchlights and the two lights above her eyes.**
+      Three tones inside a 3 px eye is one grey dot.
 
-  Geometry is the master's, widened about x=256 by 1.10. If you move a vertex
-  in icon.svg, move it here too.
+  ### Deliberate departures from the master
+
+    1. **The mass is drawn much larger — r=200, 78% of the tile,** against the
+       master's 63%. With no edge, no halo and no trail carrying the silhouette
+       the tile can afford to spend far more of the raster on her, and that is
+       most of what makes 16 px legible at all. Same trick, same reason, as
+       nx-hub's assets/icon-small.svg.
+    2. **The body ramp is nx-hub's small-variant ramp verbatim**
+       (#9f63f7 / #7718f2 / #4812a0) rather than the skin's glass, so every NX
+       app reads as one family in a 16 px menu. It is darker than her glass,
+       which here is a help: it is what the cyan eyes have to separate from.
+    3. **The eyes are 73% of her width** against the master's 68% and the
+       skin's 64%, and they are one flat cyan rather than a four-shape stack.
+       At 16 px each eye is 3.1 px and the gap between them is 3.0 px; take
+       either below three and the two merge into a single bar and she loses her
+       face. The dark rim is kept — it is the only thing giving the eye an
+       outline once the pupil is gone.
+    4. **The iris is #7df4ff, not brand cyan #00e5ff.** This is not a new
+       colour so much as an honest one: it is roughly what the master's whole
+       eye stack — the iris ramp, the two white catchlights and the small dark
+       pupil — averages to once a box filter has taken it down to three pixels.
+       Painting the result directly beats painting the stack and letting the
+       filter do it badly.
+    5. **The fire is dimmer than the master's**, not brighter. The eyes are
+       cyan here too, and at 16 px a bright cyan glow in the middle of her
+       competes with them for the same channel; the eyes have to win. It stays
+       low and left of centre, per the skin, so no compact bright shape ever
+       sits squarely under the two eyes.
+
+  Geometry is a circle at (256, 256) r=200. If you move an eye here, move it in
+  icon.svg too — they are the same creature, and the two files sit next to each
+  other in a hicolor theme.
 -->
   <defs>
     <linearGradient id="ws-body" x1="0.15" y1="0" x2="0.85" y2="1">
@@ -32,15 +75,48 @@
       <stop offset="0.5" stop-color="#7718f2"/>
       <stop offset="1"   stop-color="#4812a0"/>
     </linearGradient>
+
+    <!-- The cyan fire, low and left of centre. Dimmer than the master's
+         (departure 5), and it stops well short of her rim so there is violet
+         all the way round it: the skin's four failed attempts at this shape
+         all failed the same way, by putting a compact bright thing below two
+         eyes, which is a muzzle. -->
+    <radialGradient id="ws-fire" gradientUnits="userSpaceOnUse"
+        cx="236" cy="306" r="118" fx="214" fy="284">
+      <stop offset="0"    stop-color="#c8faff" stop-opacity="0.72"/>
+      <stop offset="0.34" stop-color="#3aeaff" stop-opacity="0.50"/>
+      <stop offset="0.72" stop-color="#00e5ff" stop-opacity="0.20"/>
+      <stop offset="1"    stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- One soft cap of light across the top left. The whole of the master's
+         facet light, sheen and lit edge collapsed into a single shape — one
+         light source, upper left, as everywhere else. -->
+    <linearGradient id="ws-cap" gradientUnits="userSpaceOnUse"
+        x1="130" y1="72" x2="330" y2="270">
+      <stop offset="0"   stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.09"/>
+      <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <clipPath id="ws-clip"><circle cx="256" cy="256" r="200"/></clipPath>
   </defs>
 
-  <path d="M 256 15 L 410.7 103.8 L 451.4 148.2 L 475.8 259.2 L 459.5 318.4
-           L 386.2 414.6 L 337.4 451.6 L 256 496 L 174.6 451.6 L 125.8 414.6
-           L 52.5 318.4 L 36.2 259.2 L 60.6 148.2 L 101.3 103.8 Z"
-        fill="url(#ws-body)"/>
+  <circle cx="256" cy="256" r="200" fill="url(#ws-body)"/>
 
-  <path d="M 117 171.4 L 174.6 145.2 L 232.2 175.7 L 174.6 228.1 Z" fill="#f6f1ff"/>
-  <path d="M 279.8 175.7 L 337.4 145.2 L 395 171.4 L 337.4 228.1 Z" fill="#f6f1ff"/>
+  <g clip-path="url(#ws-clip)">
+    <ellipse cx="236" cy="306" rx="118" ry="150" fill="url(#ws-fire)"/>
 
-  <path d="M 141.6 278 L 174.6 330 L 141.6 382 L 108.6 330 Z" fill="#00e5ff"/>
+    <path d="M 60 262 C 74 148 152 66 268 56
+             C 196 92 138 152 108 276 Z"
+          fill="url(#ws-cap)"/>
+
+    <!-- Two shapes per eye and no more: a deep violet rim (#23103f, not a
+         black — a black hole punched in a luminous body is what her first
+         design died of) and one flat cyan iris. -->
+    <ellipse cx="160" cy="268" rx="50" ry="60" fill="#23103f"/>
+    <ellipse cx="352" cy="268" rx="50" ry="60" fill="#23103f"/>
+    <ellipse cx="160" cy="270" rx="38" ry="48" fill="#7df4ff"/>
+    <ellipse cx="352" cy="270" rx="38" ry="48" fill="#7df4ff"/>
+  </g>
 </svg>

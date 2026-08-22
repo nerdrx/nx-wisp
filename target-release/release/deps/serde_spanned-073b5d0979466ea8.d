@@ -1,0 +1,9 @@
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/serde_spanned-073b5d0979466ea8.d: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/spanned.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/de.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libserde_spanned-073b5d0979466ea8.rlib: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/spanned.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/de.rs
+
+/run/media/nerdrx/Lex/claude/nx-wisp/target-release/release/deps/libserde_spanned-073b5d0979466ea8.rmeta: /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/lib.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/spanned.rs /run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/de.rs
+
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/lib.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/spanned.rs:
+/run/media/nerdrx/Lex/claude/tools/rust/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_spanned-1.1.1/src/de.rs:

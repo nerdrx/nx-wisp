@@ -13,12 +13,12 @@ use wisp_rig::{
     skin::default_skin,
     Rect, Rig, RigInput, Vec2,
 };
-use wisp_shell::{ShellConfig, WispShell};
+use wisp_shell::{bubble, ShellConfig, WispShell};
 
 fn main() {
     let secs: f32 = std::env::args().nth(1).and_then(|s| s.parse().ok()).unwrap_or(20.0);
 
-    let cfg = ShellConfig { size_px: 150.0, padding_px: 60.0 };
+    let cfg = ShellConfig { size_px: 150.0, padding_px: 60.0, ..ShellConfig::default() };
     let mut shell = match WispShell::new(&cfg) {
         Ok(s) => s,
         Err(e) => {
@@ -60,6 +60,12 @@ fn main() {
     let mut last = Instant::now();
     let end = Instant::now() + Duration::from_secs_f32(secs);
     let mut frames = 0u32;
+    // After two seconds she says something, so the bubble path is exercised
+    // against the real GPU rather than only offscreen.
+    let speak_at = Instant::now() + Duration::from_secs(2);
+    let mut said_at: Option<Instant> = None;
+    let mut layout: Option<bubble::Layout> = None;
+    let mut bubble_calls = 0usize;
 
     while Instant::now() < end {
         let tick = shell.pump();
@@ -110,11 +116,42 @@ fn main() {
 
         let frame = rig.frame();
         let outline = trace_frame(frame, ContourOptions::default());
-        shell.draw(frame, &outline);
+
+        let due = said_at.is_none() && Instant::now() >= speak_at;
+        let at = wisp_paint::Point { x: local.x, y: local.y };
+        let (sw2, sh2) = shell.surface_size();
+        let bnds = wisp_paint::Rect::from_size(sw2 as f32, sh2 as f32);
+        let ms = said_at.map(|t| t.elapsed().as_millis() as u64).unwrap_or(0);
+        let lay = &mut layout;
+        shell.draw_with(frame, &outline, |painter, engine, scene| {
+            let mut sink = bubble::Live::new(painter, engine);
+            if due {
+                *lay = Some(bubble::Layout::new(
+                    "I am on your desktop, and this is a real speech bubble.",
+                    wisp_proto::Urgency::Notable,
+                    at,
+                    cfg.size_px,
+                    bnds,
+                    &mut sink,
+                ));
+            }
+            if let Some(l) = lay.as_ref() {
+                if !l.should_dismiss(ms) {
+                    l.paint(wisp_proto::Tier::Full, l.reveal_at(ms), &mut sink, scene);
+                }
+            }
+        });
+        if due {
+            said_at = Some(Instant::now());
+        }
+        if layout.is_some() && said_at.is_some() {
+            bubble_calls = bubble_calls.max(shell.last_draw_calls());
+        }
         frames += 1;
 
         std::thread::sleep(Duration::from_millis(16));
     }
     println!("{frames} frames — she was on your desktop");
     println!("she travelled x {:.0}..{:.0} of a {ow:.0}px-wide screen", min_x, max_x);
+    println!("peak draw calls with a bubble up: {bubble_calls}");
 }
