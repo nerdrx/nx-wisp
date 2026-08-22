@@ -95,6 +95,14 @@ On upgrade the queue is replayed **oldest-first with staleness filtering** — a
 item whose `stale_after` has passed is dropped, recorded as dropped, and never
 silently resurrected.
 
+### 3.5b The character is not chrome
+
+DESIGN.md's angular geometry rule (radii 3–6 px, pills banned, no round blobs)
+governs **chrome** — speech bubbles, panels, menus, the rig editor. It does
+**not** govern the character herself. She is a creature and she is meant to be
+cute; roundness is correct for her. Do not "fix" a skin to comply with the
+geometry rule.
+
 ### 3.6 Skin format
 
 Declarative and data-only. A skin can never contain executable code. Versioned;
