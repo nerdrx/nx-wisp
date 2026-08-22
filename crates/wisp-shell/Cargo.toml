@@ -3,3 +3,16 @@ name = "wisp-shell"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+wisp-rig   = { path = "../wisp-rig" }
+wisp-paint = { path = "../wisp-paint" }
+wisp-theme = { path = "../wisp-theme" }
+smithay-client-toolkit = { version = "0.21", features = ["system"] }
+wayland-client = "0.31"
+raw-window-handle = "0.6"
+wgpu = "30.0"
+pollster = "1.0"
+tracing = "0.1"
+thiserror = "2"
