@@ -46,7 +46,31 @@ is what makes F45's narration actually fire.
   the blur on floating layers, or lower the floor back toward 0.7 so it reads.
   **Operator's call; not being made unilaterally.**
 
-## `wisp-proto` amendment batch (apply once the wave lands)
+## `wisp-proto` amendment batch — status 2026-08-23
+
+**Done:** `Mood` is SPEC §3.8 in `wisp-proto`; the three copies are re-exports
+and the expression table lives with the vocabulary.
+
+**Still open**, now with the second wave's additions:
+
+- Move `ToolDescriptor`/`ToolOutcome`/`ToolFn` from `wisp-fleet` into
+  `wisp-proto` beside §3.7's `Consent` — `wisp-mind` needs them and SPEC §2
+  gives it only proto+gov, so today it carries a fleet dependency instead.
+- `SenseId::Files` does not exist, so `Observation::Files` rides the Vitals
+  consent row and cannot be revoked separately.
+- SPEC §3.1's "downgrades are synchronous, immediate and infallible" needs a
+  stated exception for warm eviction: llama.cpp has no "give the VRAM back but
+  keep the weights" API, so the VRAM half is infallible and the cheap way back
+  is best-effort.
+- SPEC §3.2's "never wall-clock" needs its stated exception for memory decay
+  (a memory laid down before a suspend really is a day older).
+- `GpuTarget::index_in` is unusable with llama.cpp (PCI pairs vs ggml's
+  name/kind/memory); a `matches_description` or an explicit ggml-index hint
+  would close it.
+- `wisp_fleet::config_dir()` skips `XDG_CONFIG_HOME` where every other crate
+  honours it.
+
+## previous amendment list (historical)
 
 - `TierReason` has no CPU or memory pressure variant, so a heavy compile is
   reported as `HeavyProcess` naming the top consumer. Add `CpuPressure` /
