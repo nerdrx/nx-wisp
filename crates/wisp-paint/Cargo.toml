@@ -3,3 +3,17 @@ name = "wisp-paint"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "wgpu renderer, 2D vector drawing, text, widgets and the sprite atlas."
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+wisp-theme = { path = "../wisp-theme" }
+wgpu = "30.0.1"
+lyon = "1.0.19"
+cosmic-text = "0.19.0"
+bytemuck = { version = "1.24.0", features = ["derive"] }
+pollster = "1.0.1"
+thiserror = "2.0.17"
+
+[dev-dependencies]
+png = "0.18.1"

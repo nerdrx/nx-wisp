@@ -3,3 +3,6 @@ name = "wisp-theme"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "The NX design language (DESIGN.md v1.5) as typed Rust tokens."
+
+[dependencies]
