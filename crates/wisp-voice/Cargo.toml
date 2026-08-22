@@ -3,3 +3,81 @@ name = "wisp-voice"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "NX Wisp voice: streaming local TTS, whisper STT behind the consent gate, lip-sync drive, and PipeWire ducking."
+
+# ---------------------------------------------------------------------------
+# Versions are pinned explicitly here rather than inherited from the workspace.
+# This crate is the only one that links speech engines, and an engine bump is a
+# behaviour change (different phoneme set, different sample rate) rather than a
+# routine dependency bump. It should be visible in this file's diff.
+# ---------------------------------------------------------------------------
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+wisp-gov = { path = "../wisp-gov" }
+
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+tracing = "0.1.41"
+thiserror = "2.0.17"
+sha2 = "0.10.9"
+
+# The model fetcher. `default-features = false` drops gzip on purpose: we hash
+# and resume raw bytes, and a transparently decompressed body makes both
+# `Content-Range` arithmetic and the pinned sha256 meaningless.
+ureq = { version = "3.4.0", default-features = false, features = ["rustls"], optional = true }
+
+# --- optional real backends; every one of them has a fake in-tree ------------
+piper-rs = { version = "0.2.0", optional = true }
+# The same phonemiser `piper-rs` calls internally. We need it a second time
+# because `Piper::create` returns audio and nothing else — see `src/piper.rs`.
+espeak-rs = { version = "0.2.0", optional = true }
+# `tracing_backend` is not optional in spirit: without a backend feature,
+# `install_logging_hooks` silences whisper.cpp entirely, and silently losing a
+# real load failure is its own bug. With it, the app's tracing filter decides.
+whisper-rs = { version = "0.16.0", default-features = false, features = ["tracing_backend"], optional = true }
+pipewire = { version = "0.10.1", optional = true }
+
+# The consent adapter. SPEC §2's crate map says this crate may depend on
+# `proto, gov` — so this is NOT a default feature, and the crate builds and
+# tests SPEC-clean without it. It exists because the only legitimate source of
+# a `SenseHandle` is `wisp_senses::consent::ConsentLedger::grant`, and
+# reimplementing that gate here would be exactly the wrong thing to do.
+wisp-senses = { path = "../wisp-senses", default-features = false, optional = true }
+
+[dev-dependencies]
+tempfile = "3.23.0"
+# Only the consent-adapter tests need this: `ConsentLedger::load_from` takes the
+# bus sender of SPEC §3.2, and there is no way to build one without naming
+# tokio's broadcast channel. The crate itself uses no async at all.
+tokio = { version = "1.47.1", features = ["sync"] }
+
+[features]
+default = []
+# Fetching models over the network. Off in tests: `Fetcher` is a trait and the
+# suite uses `fetch::FakeNet`.
+net = ["dep:ureq"]
+# Piper (VITS) synthesis through ort. Pulls onnxruntime and a vendored espeak-ng.
+piper-tts = ["dep:piper-rs", "dep:espeak-rs"]
+# whisper.cpp on the CPU. This is a real shipping configuration, not a
+# fallback: `tier::policy` forbids the discrete GPU at T2 and below, so the CPU
+# path is what she actually transcribes with whenever the machine is busy —
+# which is most of the time worth transcribing in.
+whisper-stt = ["dep:whisper-rs"]
+# Adds the Vulkan backend for T0/T1 — the one GPU API SPEC §1 allows.
+# Needs the Vulkan headers (`vulkan-headers`) and a shader compiler present at
+# build time; without them whisper.cpp's cmake fails at configure.
+whisper-vulkan = ["whisper-stt", "whisper-rs/vulkan"]
+# Live PipeWire ducking and playback. Without it, ducking runs through the
+# `pactl` backend (also real) or the in-memory fake.
+pipewire-backend = ["dep:pipewire"]
+# See the note on `wisp-senses` above.
+consent = ["dep:wisp-senses"]
+
+[[example]]
+name = "say"
+required-features = ["net", "piper-tts"]
+
+[[example]]
+name = "listen"
+required-features = ["net", "whisper-stt", "consent"]

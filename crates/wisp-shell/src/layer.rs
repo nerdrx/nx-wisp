@@ -110,6 +110,8 @@ struct State {
     configured: bool,
     exit: bool,
     tick: Tick,
+    /// Frames drawn, for the self-dump.
+    frames: u64,
     /// The polygon currently installed as the input region, so we only rebuild
     /// the wl_region when the silhouette actually changed. Rebuilding it every
     /// frame is a round trip per frame for nothing.
@@ -193,7 +195,12 @@ impl WispShell {
         surface.configure(
             &device,
             &wgpu::SurfaceConfiguration {
-                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                // COPY_SRC so she can photograph herself: NX_WISP_DUMP_FRAME
+                // reads the swapchain back to a PNG. Nothing in this repo may
+                // open a window on the operator's desktop, so a self-dump
+                // inside a nested compositor is how we ever look at her.
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                    | wgpu::TextureUsages::COPY_SRC,
                 format: FORMAT,
                 width: side,
                 height: side,
@@ -225,6 +232,7 @@ impl WispShell {
             pos: (200, 200),
             output: None,
             on_output: None,
+            frames: 0,
             configured: false,
             exit: false,
             tick: Tick::default(),
@@ -545,8 +553,80 @@ impl State {
         {
             tracing::warn!("render failed: {e}");
         }
+        // Photograph ourselves before presenting, if asked. Deliberately after
+        // the render and before present, so what lands in the file is exactly
+        // the frame the compositor is about to show.
+        self.frames += 1;
+        if let Ok(path) = std::env::var("NX_WISP_DUMP_FRAME") {
+            let after: u64 = std::env::var("NX_WISP_DUMP_AFTER")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(60);
+            if self.frames == after {
+                self.dump(&tex.texture, &path);
+            }
+        }
         self.painter.queue().present(tex);
         self.tick.drew = true;
+    }
+}
+
+impl State {
+    /// Read the swapchain back and write a PNG. Slow and synchronous — this
+    /// only ever runs for a test.
+    fn dump(&self, tex: &wgpu::Texture, path: &str) {
+        let (w, h) = (self.width, self.height);
+        // Buffer rows must be a multiple of 256 bytes.
+        let unpadded = w * 4;
+        let pad = (256 - (unpadded % 256)) % 256;
+        let padded = unpadded + pad;
+        let device = self.painter.device();
+        let buf = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("wisp.dump"),
+            size: (padded * h) as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+        let mut enc = device.create_command_encoder(&Default::default());
+        enc.copy_texture_to_buffer(
+            tex.as_image_copy(),
+            wgpu::TexelCopyBufferInfo {
+                buffer: &buf,
+                layout: wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(padded),
+                    rows_per_image: Some(h),
+                },
+            },
+            wgpu::Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+        );
+        self.painter.queue().submit(Some(enc.finish()));
+        buf.slice(..).map_async(wgpu::MapMode::Read, |_| {});
+        let _ = device.poll(wgpu::PollType::Wait { submission_index: None, timeout: None });
+        let data = match buf.slice(..).get_mapped_range() {
+            Ok(d) => d.to_vec(),
+            Err(e) => {
+                tracing::warn!("frame dump failed to map: {e:?}");
+                return;
+            }
+        };
+        let mut rgba = Vec::with_capacity((unpadded * h) as usize);
+        for row in 0..h {
+            let start = (row * padded) as usize;
+            rgba.extend_from_slice(&data[start..start + unpadded as usize]);
+        }
+        match std::fs::File::create(path) {
+            Ok(f) => {
+                let mut e = png::Encoder::new(std::io::BufWriter::new(f), w, h);
+                e.set_color(png::ColorType::Rgba);
+                e.set_depth(png::BitDepth::Eight);
+                if let Ok(mut wr) = e.write_header() {
+                    let _ = wr.write_image_data(&rgba);
+                }
+                tracing::info!(path, w, h, "wrote a frame dump");
+            }
+            Err(e) => tracing::warn!("frame dump could not be written: {e}"),
+        }
     }
 }
 

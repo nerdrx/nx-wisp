@@ -1,0 +1,21 @@
+{
+  "id": "wisp-warm",
+  "name": "Wisp (warm)",
+  "engine": "Piper",
+  "model": "piper-en_GB-alba-medium",
+  "config": "piper-en_GB-alba-medium-config",
+  "pitch": 0.94,
+  "rate": 0.96,
+  "volume": 0.9,
+  "allowed_until": "Lobotomised",
+  "code_placeholder": "there's a code block on your screen",
+  "moods": {
+    "curious":   { "pitch": 1.04, "rate": 1.02 },
+    "delighted": { "pitch": 1.09, "rate": 1.07, "volume": 1.05 },
+    "smug":      { "pitch": 0.98, "rate": 0.94 },
+    "worried":   { "pitch": 1.03, "rate": 1.06, "volume": 0.95 },
+    "bored":     { "pitch": 0.96, "rate": 0.92, "volume": 0.90 },
+    "sleepy":    { "pitch": 0.93, "rate": 0.82, "volume": 0.85 },
+    "alarmed":   { "pitch": 1.12, "rate": 1.18, "volume": 1.10 }
+  }
+}

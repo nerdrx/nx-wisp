@@ -15,6 +15,7 @@ raw-window-handle = "0.6"
 wgpu = "30.0"
 pollster = "1.0"
 tracing = "0.1"
+png = "0.18"
 thiserror = "2"
 
 [dev-dependencies]

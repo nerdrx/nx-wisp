@@ -1,0 +1,21 @@
+{
+  "id": "wisp",
+  "name": "Wisp",
+  "engine": "Piper",
+  "model": "piper-en_US-amy-medium",
+  "config": "piper-en_US-amy-medium-config",
+  "pitch": 1.0,
+  "rate": 1.0,
+  "volume": 0.9,
+  "allowed_until": "Lobotomised",
+  "code_placeholder": "there's a code block here — it's on your screen",
+  "moods": {
+    "curious":   { "pitch": 1.06, "rate": 1.03 },
+    "delighted": { "pitch": 1.12, "rate": 1.10, "volume": 1.05 },
+    "smug":      { "pitch": 0.97, "rate": 0.92 },
+    "worried":   { "pitch": 1.04, "rate": 1.08, "volume": 0.95 },
+    "bored":     { "pitch": 0.95, "rate": 0.90, "volume": 0.90 },
+    "sleepy":    { "pitch": 0.92, "rate": 0.78, "volume": 0.85 },
+    "alarmed":   { "pitch": 1.15, "rate": 1.22, "volume": 1.10 }
+  }
+}

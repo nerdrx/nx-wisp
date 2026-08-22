@@ -1,0 +1,14 @@
+{
+  "id": "test-tone",
+  "name": "Test tone (no model)",
+  "engine": "Fake",
+  "pitch": 1.0,
+  "rate": 1.0,
+  "volume": 0.8,
+  "allowed_until": "Lobotomised",
+  "code_placeholder": "code block",
+  "moods": {
+    "delighted": { "pitch": 1.10, "rate": 1.10 },
+    "sleepy":    { "pitch": 0.92, "rate": 0.80 }
+  }
+}
