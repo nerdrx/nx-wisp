@@ -60,6 +60,8 @@ pub mod mock;
 pub mod recorder;
 pub mod shell;
 pub mod editor_host;
+pub mod mind_host;
+pub mod models_cmd;
 pub mod shell_layer;
 pub mod state;
 

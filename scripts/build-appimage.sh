@@ -104,8 +104,13 @@ done
 # ---------------------------------------------------------------- build
 
 if [[ $NO_BUILD -eq 0 ]]; then
-    echo "==> cargo build --release -p wisp"
-    cargo build --release -p wisp
+    # The release ships the real thing: llama.cpp on Vulkan and Piper TTS.
+    # Both are behind features because the default build (and CI) must work
+    # with no GPU headers and no ort cache. WISP_FEATURES overrides — a laptop
+    # without the staged Vulkan SDK can still cut a mock-brained build.
+    FEATURES="${WISP_FEATURES:-full}"
+    echo "==> cargo build --release -p wisp --features $FEATURES"
+    cargo build --release -p wisp --features "$FEATURES"
 fi
 
 BIN="target/release/$BIN_NAME"

@@ -63,6 +63,8 @@ pub enum Command {
     Doctor,
     /// F76: pose her live, against the shipping renderer.
     Edit(Option<std::path::PathBuf>),
+    /// F55: list the pinned models, or fetch them by explicit request.
+    Models(Vec<String>),
     Install(InstallArgs),
     Uninstall(InstallArgs),
     Version,
@@ -337,6 +339,16 @@ fn parse_command<I: Iterator<Item = String>>(
             expect_end(it, "doctor", g)?;
             Ok(Command::Doctor)
         }
+        "models" => {
+            let mut rest = Vec::new();
+            while let Some(arg) = it.next() {
+                if try_global(&arg, it, g)? {
+                    continue;
+                }
+                rest.push(arg);
+            }
+            Ok(Command::Models(rest))
+        }
         "edit" => {
             let mut path = None;
             while let Some(arg) = it.next() {
@@ -503,6 +515,16 @@ pub fn dispatch(inv: Invocation) -> Result<i32, CliError> {
         Command::Tier(cmd) => tier(&dir, cmd),
         Command::Config(cmd) => config_cmd(&dir, cmd),
         Command::Edit(path) => Ok(crate::editor_host::run(path.as_deref())),
+        Command::Models(args) => match args.first().map(String::as_str) {
+            None | Some("status") => {
+                print!("{}", crate::models_cmd::status(&dir));
+                Ok(0)
+            }
+            Some("fetch") => Ok(crate::models_cmd::fetch(&dir, &args[1..])),
+            Some(other) => Err(CliError::new(format!(
+                "models knows `status` and `fetch`, not {other:?}."
+            ))),
+        },
         Command::Doctor => {
             let checks = doctor::run(&doctor::Env::current());
             print!("{}", doctor::render(&checks));

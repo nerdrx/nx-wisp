@@ -298,6 +298,25 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
     let (speak_tx, speak_rx) = mpsc::unbounded_channel::<Utterance>();
     let speaker = Speaker(speak_tx);
 
+    // --- cognition ----------------------------------------------------------
+    // Optional by design: a build without a model, or a machine the backend
+    // cannot start on, still gives the operator the creature. She is just a
+    // creature without language, and `status` says so.
+    let mind = match crate::mind_host::MindHost::spawn(
+        &dir,
+        speaker.clone(),
+        recorder.clone(),
+        bus_tx.clone(),
+        clock.clone(),
+    ) {
+        Ok(h) => Some(h),
+        Err(e) => {
+            tracing::warn!("she has no mind this run: {e}");
+            None
+        }
+    };
+    let mind_tx = mind.as_ref().map(|m| m.sender());
+
     if let Some(pinned) = cfg.tier.pinned {
         let _ = gov_tx.send(GovCmd::Pin(pinned));
     }
@@ -315,6 +334,7 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
             recorder.clone(),
             counters.clone(),
             clock.clone(),
+            mind_tx.clone(),
             shutdown.clone(),
         )),
         tokio::spawn(governor_task(
@@ -326,6 +346,7 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
             counters.clone(),
             shell.clone(),
             GovContext {
+                mind: mind_tx.clone(),
                 dir: dir.clone(),
                 session,
                 clock: clock.clone(),
@@ -393,6 +414,9 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
                 tracing::error!(error = %e, "a subsystem task panicked");
             }
         }
+    }
+    if let Some(m) = mind {
+        m.shutdown();
     }
     // The guard is taken and dropped in its own scope. A `std::sync::MutexGuard`
     // held across an `.await` would make this future `!Send` — and, worse, would
@@ -471,17 +495,41 @@ async fn relay(
     recorder: Arc<Recorder>,
     counters: Arc<Counters>,
     clock: Clock,
+    mind: Option<crate::mind_host::MindSender>,
     mut shutdown: Shutdown,
 ) {
+    // The mind thinks on a cadence, not per event — thinking is expensive and
+    // observations are not commands. Two seconds is the reflex model's world;
+    // the governor's tier messages arrive separately and jump the queue by
+    // being applied first in the drain.
+    let mut think = tokio::time::interval(Duration::from_secs(2));
+    think.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     loop {
         let ev = tokio::select! {
             r = inner.recv() => r,
+            _ = think.tick() => {
+                if let Some(m) = &mind {
+                    m.send(crate::mind_host::MindMsg::Tick(clock.now()));
+                }
+                continue;
+            }
             _ = shutdown.wait() => return,
         };
         match ev {
             Ok(ev) => {
                 counters.note(&ev.kind);
                 recorder.record(&ev);
+                // The mind sees what the senses saw — after the recorder, like
+                // every other consumer, so `explain` can never know less than
+                // she did.
+                if let Some(m) = &mind {
+                    if let EventKind::Sensed(obs) = &ev.kind {
+                        m.send(crate::mind_host::MindMsg::Obs(obs.clone(), ev.at));
+                        if matches!(obs, Observation::Speech { final_: true, .. }) {
+                            m.send(crate::mind_host::MindMsg::Heard(ev.at));
+                        }
+                    }
+                }
                 let _ = bus.send(ev);
             }
             Err(broadcast::error::RecvError::Lagged(n)) => {
@@ -512,6 +560,7 @@ async fn relay(
 // ---------------------------------------------------------------------------
 
 struct GovContext {
+    mind: Option<crate::mind_host::MindSender>,
     dir: PathBuf,
     session: u64,
     /// The one clock every timestamp in the flight recorder comes from.
@@ -579,6 +628,21 @@ async fn governor_task(
         // returns (SPEC §3.1). By the time we look at the result, the VRAM is
         // already freed and the senses are already slower.
         let step = governor.step();
+        if step.change.is_some() {
+            if let Some(m) = &ctx.mind {
+                m.send(crate::mind_host::MindMsg::Tier {
+                    tier: step.tier,
+                    reason: step
+                        .change
+                        .as_ref()
+                        .map(|c| c.reason.clone())
+                        .unwrap_or(wisp_proto::TierReason::Idle),
+                    devices: step.devices.clone(),
+                    vram: step.vram.clone(),
+                    now: ctx.clock.now(),
+                });
+            }
+        }
         tracing::trace!(tier = ?step.tier, because = %step.explanation, "governor polled");
         let changed = step.event().is_some();
         if let Some(ev) = step.event() {
