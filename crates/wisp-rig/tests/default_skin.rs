@@ -255,10 +255,26 @@ fn she_is_round_because_she_is_a_creature_and_not_chrome() {
     // That rule governs *chrome*: bubbles, panels, menus, the rig editor. It was
     // applied to the character by mistake, and the result was a faceted crystal
     // that at 96 px — the size she actually is on a desktop — read as a dark
-    // smudge. F73's revised brief makes her a chibi, and a chibi is round by
+    // smudge. F73's revised brief makes her round, and she is round by
     // definition. So the assertion is inverted rather than deleted: her artwork
     // must *keep* its curves, and the next person to "fix" her to comply with
     // the geometry rule gets a failing test and this comment.
+    //
+    // The *names* below changed with F73's third attempt and the assertion did
+    // not. The chibi humanoid it used to name is gone — she is a non-humanoid
+    // wisp now, so `hair_back` and `hair_front` no longer exist, because hair
+    // is a humanoid part and a humanoid at sprite scale is the uncanny valley
+    // this redesign exists to escape. The two names are replaced by the two
+    // shapes that carry the same structural job in the wisp:
+    //
+    //   hair_back  -> halo   the soft outer glow, the outermost mass
+    //   hair_front -> flame  the cyan fire, the innermost mass
+    //
+    // `shell`, `body`, `eye_l` and `eye_r` are unchanged and still mean what
+    // they meant. Roundness matters more to this design than to either that
+    // came before it: she has no face and no limbs, so a simple round mass is
+    // the strongest cuteness signal she has left, and it is also the shape
+    // that best survives being small.
     let s = wisp();
     let curved = |sh: &wisp_rig::skin::ShapeDef| {
         sh.path
@@ -266,7 +282,7 @@ fn she_is_round_because_she_is_a_creature_and_not_chrome() {
             .iter()
             .any(|v| matches!(v, Verb::Quad | Verb::Cubic))
     };
-    for name in ["shell", "hair_back", "hair_front", "body", "eye_l", "eye_r"] {
+    for name in ["shell", "halo", "flame", "body", "eye_l", "eye_r"] {
         let sh = s
             .shapes
             .iter()
