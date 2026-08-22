@@ -110,16 +110,22 @@ if [[ $NO_BUILD -eq 0 ]]; then
     # without the staged Vulkan SDK can still cut a mock-brained build.
     FEATURES="${WISP_FEATURES:-full}"
     echo "==> cargo build --release -p wisp --features $FEATURES"
-    # espeak-ng's cmake data target has a parallel-make race (its own Makefile
-    # forces -j into a submake, and the data rule can run before phsource has
-    # been copied — "Error processing file '…/phsource/intonation'"). The
-    # failure is timing-dependent and the partial build persists, so one retry
-    # continues from cached state and completes. Two failures in a row is a
-    # real error and stops the release.
-    if ! cargo build --release -p wisp --features "$FEATURES"; then
-        echo "==> build failed once (espeak-ng data race is the known cause); retrying"
-        cargo build --release -p wisp --features "$FEATURES"
-    fi
+    # espeak-rs-sys copies its espeak-ng source tree into target/<profile>/
+    # once, guarded by `if !exists` — so a build interrupted mid-copy leaves a
+    # TRUNCATED tree that the guard then treats as complete forever, and every
+    # later build fails with "Error processing file '…/phsource/intonation'".
+    # Detect the truncation and clear it before building.
+    for prof in release debug; do
+        d="target/$prof/espeak-ng"
+        if [[ -d "$d" && ! -d "$d/phsource" ]]; then
+            echo "==> $d is a truncated espeak-ng copy (interrupted build); removing"
+            rm -rf "$d"
+            # The cmake configure cache in OUT_DIR remembers the truncated
+            # source; it has to go with it.
+            rm -rf target/$prof/build/espeak-rs-sys-*
+        fi
+    done
+    cargo build --release -p wisp --features "$FEATURES"
 fi
 
 BIN="target/release/$BIN_NAME"
