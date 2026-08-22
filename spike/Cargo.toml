@@ -1,0 +1,12 @@
+[package]
+name = "spike"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+png = "0.18.1"
+pollster = "1.0.1"
+raw-window-handle = "0.6.2"
+smithay-client-toolkit = { version = "0.21.1", features = ["system"] }
+wayland-client = "0.31.15"
+wgpu = "30.0.1"
