@@ -6,7 +6,12 @@
 
 use std::time::Instant;
 
-use wisp_proto::{sense::SenseId, Tier, Utterance};
+use std::collections::HashMap;
+
+use wisp_proto::{
+    sense::{Observation, SenseId},
+    Tier, Utterance,
+};
 use wisp_rig::{
     physics::{step, BodyState, Forces, PhysicsParams, Surface},
     ContourOptions, Polygon, Rect, RigFrame, Vec2,
@@ -18,7 +23,18 @@ use crate::shell::{FrameCtx, Shell};
 pub struct LayerShellHost {
     shell: WispShell,
     body: BodyState,
+    /// The floor of the screen — her fallback when she is over nothing.
     ground: Surface,
+    /// The operator's real windows, by id, as (top edge y, left x, right x).
+    /// F68: their top edges are the ledges she stands on.
+    windows: HashMap<u64, (f32, f32, f32)>,
+    /// Rebuilt from `windows` only when they change, not every frame.
+    terrain: Vec<Surface>,
+    terrain_dirty: bool,
+    /// Where she was when the ledge set was last chosen. The cap picks the
+    /// nearest windows, so the set goes stale as she travels — not just when
+    /// the windows themselves change.
+    terrain_at: Vec2,
     bounds: Rect,
     cursor: Option<Vec2>,
     grab: Option<Vec2>,
@@ -68,6 +84,10 @@ impl LayerShellHost {
             // The bottom of the screen is her floor until the terrain feed is
             // wired up and she can stand on your windows.
             ground: Surface { id: 1, y: oh - 12.0, x0: 0.0, x1: ow },
+            windows: HashMap::new(),
+            terrain: Vec::new(),
+            terrain_dirty: true,
+            terrain_at: start,
             bounds: Rect {
                 min: Vec2 { x: 0.0, y: 0.0 },
                 max: Vec2 { x: ow, y: oh },
@@ -90,6 +110,58 @@ impl LayerShellHost {
         self.closed
     }
 
+    /// Turn the window rectangles into ledges.
+    ///
+    /// Only the TOP edge of a window is standable, and the rig's surfaces are
+    /// one-way, so she lands on a title bar and passes up through it from
+    /// below — which is what you want from a creature climbing your desktop.
+    ///
+    /// Capped and sorted by nearness: a busy desktop can have dozens of
+    /// windows, and the physics step is O(surfaces) on every frame at every
+    /// tier. Her floor is always included, so a cap can never drop her out of
+    /// the world.
+    fn rebuild_terrain(&mut self) {
+        // Re-pick when the windows changed, OR when she has travelled far
+        // enough that "nearest" means something different. Without the second
+        // test she would sail past the cap and fall through a window she was
+        // heading straight for.
+        const RECHOOSE_PX: f32 = 64.0;
+        let moved = (self.body.pos.x - self.terrain_at.x).abs()
+            + (self.body.pos.y - self.terrain_at.y).abs();
+        if !self.terrain_dirty && moved < RECHOOSE_PX {
+            return;
+        }
+        self.terrain_dirty = false;
+        self.terrain_at = self.body.pos;
+        const MAX_LEDGES: usize = 24;
+
+        self.terrain.clear();
+        self.terrain.push(self.ground);
+        let here = self.body.pos;
+        let mut near: Vec<(f32, Surface)> = self
+            .windows
+            .iter()
+            .map(|(id, (y, x0, x1))| {
+                let dx = if here.x < *x0 {
+                    x0 - here.x
+                } else if here.x > *x1 {
+                    here.x - x1
+                } else {
+                    0.0
+                };
+                let d = dx * dx + (here.y - y) * (here.y - y);
+                (d, Surface { id: *id, y: *y, x0: *x0, x1: *x1 })
+            })
+            .collect();
+        near.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        self.terrain.extend(near.into_iter().take(MAX_LEDGES).map(|(_, s)| s));
+        tracing::debug!(
+            windows = self.windows.len(),
+            ledges = self.terrain.len(),
+            "terrain rebuilt"
+        );
+    }
+
     fn pump(&mut self, dt: f32) {
         let tick = self.shell.pump();
         if tick.closed {
@@ -110,9 +182,10 @@ impl LayerShellHost {
         if tick.released {
             self.grab = None;
         }
+        self.rebuild_terrain();
         let forces = Forces {
             params: self.params,
-            surfaces: std::slice::from_ref(&self.ground),
+            surfaces: &self.terrain,
             bounds: Some(self.bounds),
             grab: self.grab,
             wind: Vec2::ZERO,
@@ -187,6 +260,28 @@ impl Shell for LayerShellHost {
 
     fn set_tier(&mut self, tier: Tier) {
         self.shell.set_tier(tier);
+    }
+
+    fn observed(&mut self, obs: &Observation) {
+        let Observation::Window { id, x, y, w, h, gone } = obs else { return };
+        if *gone {
+            if self.windows.remove(id).is_some() {
+                self.terrain_dirty = true;
+            }
+            return;
+        }
+        // A zero-sized window is not a ledge; a shaded or rolled-up one reports
+        // as such and would otherwise become an invisible tightrope.
+        if *w == 0 || *h == 0 {
+            if self.windows.remove(id).is_some() {
+                self.terrain_dirty = true;
+            }
+            return;
+        }
+        let ledge = (*y as f32, *x as f32, (*x + *w as i32) as f32);
+        if self.windows.insert(*id, ledge) != Some(ledge) {
+            self.terrain_dirty = true;
+        }
     }
 
     fn cursor(&self) -> Option<(f32, f32)> {

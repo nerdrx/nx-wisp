@@ -765,6 +765,9 @@ fn on_bus_event(
 ) {
     match &ev.kind {
         EventKind::Sensed(obs) => {
+            // The shell needs the window rectangles: their top edges are the
+            // ledges she stands on (F68).
+            shell.lock().unwrap_or_else(|e| e.into_inner()).observed(obs);
             let mut a = attention.0.lock().unwrap_or_else(|e| e.into_inner());
             a.observe(clock.now(), obs);
             // Being spoken to is an opening, and it is the operator asking.

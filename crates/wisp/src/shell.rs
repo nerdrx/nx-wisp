@@ -35,7 +35,7 @@
 //! decisions, and they belong to `wisp-attn` and `wisp-gov`.
 
 use wisp_attn::MoveTarget;
-use wisp_proto::{SenseId, Tier, Utterance};
+use wisp_proto::{sense::Observation, SenseId, Tier, Utterance};
 use wisp_rig::{ContourOptions, Polygon, RigFrame};
 
 /// What the body is told, once per frame.
@@ -82,6 +82,15 @@ pub trait Shell: Send {
     /// She poked a window (F40's focus warden, and her antics).
     fn poke(&mut self, _window: Option<u64>) {}
 
+    /// Something was sensed.
+    ///
+    /// The shell needs this for one thing above all: `Observation::Window`
+    /// carries the operator's real window rectangles, and F68 turns their top
+    /// edges into ledges she can stand on. Without it her only floor is the
+    /// bottom of the screen and she is a creature on top of the desktop rather
+    /// than in it.
+    fn observed(&mut self, _obs: &Observation) {}
+
     /// The operator changed her size in the config.
     fn set_size(&mut self, _size_px: f32) {}
 
@@ -111,6 +120,7 @@ pub trait Shell: Send {
 #[derive(Debug, Default)]
 pub struct Headless {
     pub frames: u64,
+    pub windows: Vec<(u64, bool)>,
     pub said: Vec<String>,
     pub clips: Vec<String>,
     pub tells: Vec<(SenseId, bool)>,
@@ -120,6 +130,11 @@ pub struct Headless {
 impl Shell for Headless {
     fn present(&mut self, _frame: &RigFrame, _input_region: &Polygon, _ctx: &FrameCtx) {
         self.frames += 1;
+    }
+    fn observed(&mut self, obs: &Observation) {
+        if let Observation::Window { id, gone, .. } = obs {
+            self.windows.push((*id, *gone));
+        }
     }
     fn say(&mut self, utterance: &Utterance) {
         self.said.push(utterance.text.clone());
