@@ -110,6 +110,22 @@ if [[ $NO_BUILD -eq 0 ]]; then
     # without the staged Vulkan SDK can still cut a mock-brained build.
     FEATURES="${WISP_FEATURES:-full}"
     echo "==> cargo build --release -p wisp --features $FEATURES"
+    # espeak-ng has a 160-byte path_home buffer. Its data-compile step builds
+    # "<workspace>/target/release/build/espeak-rs-sys-<hash>/out/build/espeak-ng-data"
+    # (~75 chars past the workspace root) into that buffer via snprintf; past
+    # 160 the path silently truncates, the existence check fails, and the build
+    # dies with "Error processing file '…/phsource/intonation'". It presents as
+    # flaky because it depends on WHERE you cloned. Fail fast with the real
+    # reason instead.
+    ROOT_LEN=${#PWD}
+    if (( ROOT_LEN > 80 )); then
+        echo "!! this workspace path is ${ROOT_LEN} chars; espeak-ng's 160-byte"
+        echo "!! path buffer will overflow during the build (~75 chars are added"
+        echo "!! under target/). Build from a shorter path — e.g."
+        echo "!!   git worktree add /tmp/nxw \$(git rev-parse HEAD)"
+        exit 1
+    fi
+
     # espeak-rs-sys copies its espeak-ng source tree into target/<profile>/
     # once, guarded by `if !exists` — so a build interrupted mid-copy leaves a
     # TRUNCATED tree that the guard then treats as complete forever, and every
