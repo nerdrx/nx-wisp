@@ -10,9 +10,15 @@
 pub mod bridge;
 pub mod bubble;
 pub mod layer;
+pub mod window;
 pub mod tell;
 
 pub use layer::{ShellConfig, WispShell};
+pub use window::{EditorWindow, WindowTick};
+
+/// Re-exported so a host can interpret keys without depending on the whole of
+/// smithay-client-toolkit — the compositor is this crate's concern.
+pub use smithay_client_toolkit::seat::keyboard::Keysym;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ShellError {

@@ -61,6 +61,8 @@ pub enum Command {
     Tier(TierCmd),
     Config(ConfigCmd),
     Doctor,
+    /// F76: pose her live, against the shipping renderer.
+    Edit(Option<std::path::PathBuf>),
     Install(InstallArgs),
     Uninstall(InstallArgs),
     Version,
@@ -335,6 +337,22 @@ fn parse_command<I: Iterator<Item = String>>(
             expect_end(it, "doctor", g)?;
             Ok(Command::Doctor)
         }
+        "edit" => {
+            let mut path = None;
+            while let Some(arg) = it.next() {
+                if try_global(&arg, it, g)? {
+                    continue;
+                }
+                if path.is_some() {
+                    return Err(CliError::new(format!(
+                        "`edit` takes at most one skin file, and I already have one. \
+                         I do not know what to do with {arg}."
+                    )));
+                }
+                path = Some(std::path::PathBuf::from(arg));
+            }
+            Ok(Command::Edit(path))
+        }
         "install" | "uninstall" => {
             let mut a = InstallArgs::default();
             while let Some(arg) = it.next() {
@@ -484,6 +502,7 @@ pub fn dispatch(inv: Invocation) -> Result<i32, CliError> {
         Command::Senses(cmd) => senses(&dir, cmd),
         Command::Tier(cmd) => tier(&dir, cmd),
         Command::Config(cmd) => config_cmd(&dir, cmd),
+        Command::Edit(path) => Ok(crate::editor_host::run(path.as_deref())),
         Command::Doctor => {
             let checks = doctor::run(&doctor::Env::current());
             print!("{}", doctor::render(&checks));
