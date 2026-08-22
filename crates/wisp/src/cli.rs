@@ -500,6 +500,23 @@ fn run(dir: &std::path::Path, global: &Global, args: RunArgs) -> Result<i32, Cli
     opts.fleet = args.fleet;
     opts.run_for = args.run_for;
 
+    // A real run puts her on the compositor. `--mock` deliberately does not:
+    // that mode exists so the loop can be exercised with no Wayland and no
+    // GPU, and quietly opening a surface would defeat it.
+    if !global.mock {
+        let size = config::load_from(dir).config.appearance.size_px;
+        match crate::shell_layer::LayerShellHost::new(size) {
+            Ok(host) => opts = opts.with_shell(Box::new(host)),
+            Err(e) => {
+                // Say what is wrong and keep going headless rather than
+                // refusing to start — `doctor` explains the environment, and
+                // the CLI half of her still works.
+                eprintln!("She cannot draw herself: {e}");
+                eprintln!("Running without a body. `nx-wisp doctor` will say why.");
+            }
+        }
+    }
+
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .thread_name("nx-wisp")

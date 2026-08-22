@@ -59,6 +59,7 @@ pub mod lock;
 pub mod mock;
 pub mod recorder;
 pub mod shell;
+pub mod shell_layer;
 pub mod state;
 
 #[cfg(test)]
