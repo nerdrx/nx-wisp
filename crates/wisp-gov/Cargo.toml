@@ -3,3 +3,14 @@ name = "wisp-gov"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "The elastic resource governor: tier ladder, probes, device selection, hard ceilings."
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+serde = { version = "1.0.229", features = ["derive"] }
+tracing = "0.1.44"
+thiserror = "2.0.20"
+libc = "0.2.189"
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "warn"

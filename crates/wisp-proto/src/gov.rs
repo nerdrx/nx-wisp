@@ -75,7 +75,8 @@ pub enum TierReason {
 pub struct Cost {
     pub ram_mib: u32,
     pub vram_mib: u32,
-    /// Hundredths of one core, so 50 == 0.5%.
+    /// Hundredths of one percent of a single core, so `50` == 0.5% of a core
+    /// and `10_000` == one core fully saturated.
     pub cpu_centi_pct: u32,
 }
 
@@ -86,10 +87,13 @@ impl Cost {
 impl std::ops::Add for Cost {
     type Output = Cost;
     fn add(self, o: Cost) -> Cost {
+        // Saturating: a debug build must not panic while merely *accounting*
+        // for costs. An implausible total is a reporting bug; a crash in the
+        // governor is a product failure.
         Cost {
-            ram_mib: self.ram_mib + o.ram_mib,
-            vram_mib: self.vram_mib + o.vram_mib,
-            cpu_centi_pct: self.cpu_centi_pct + o.cpu_centi_pct,
+            ram_mib: self.ram_mib.saturating_add(o.ram_mib),
+            vram_mib: self.vram_mib.saturating_add(o.vram_mib),
+            cpu_centi_pct: self.cpu_centi_pct.saturating_add(o.cpu_centi_pct),
         }
     }
 }
