@@ -37,6 +37,31 @@ impl Cmd {
     pub fn is_sprite(&self) -> bool {
         matches!(self, Cmd::Sprite { .. } | Cmd::Clip(_))
     }
+
+    /// May this command still be drawn at T3?
+    ///
+    /// T3's promise is "no compute passes, nothing on the discrete GPU" — it
+    /// was never "nothing at all". Sprite quads plus **flat solid** fills,
+    /// strokes and text cost a handful of trivial draw calls on the integrated
+    /// GPU, which is the point of moving her there.
+    ///
+    /// This exists because T3 is exactly when a warning matters most: an
+    /// NX Sentry alarm arrives while the operator is inside a game or a
+    /// headset. `wisp-attn` already lets `Alarm` through at T3 and
+    /// `wisp-fleet` already gates on it — and the painter was silently
+    /// discarding the result, so she would have raised the alarm to nobody.
+    /// Silence there is a product failure, not a saving.
+    ///
+    /// Gradients, blurs and backdrops stay shed: those are the expensive part.
+    pub fn survives_lobotomy(&self) -> bool {
+        match self {
+            Cmd::Sprite { .. } | Cmd::Clip(_) | Cmd::Text { .. } => true,
+            Cmd::Fill { paint, .. } | Cmd::Stroke { paint, .. } => {
+                matches!(paint, crate::paint::Paint::Solid(_))
+            }
+            Cmd::BlurBackdrop { .. } | Cmd::Backdrop { .. } => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]

@@ -478,8 +478,25 @@ fn a_missing_sprite_is_an_error_not_a_blank_frame() {
 
 // ----------------------------------------------------------------- the tiers
 
+/// Restores the shared painter's tier even if the test panics.
+///
+/// `painter()` hands out a static behind a mutex, so a test that panics between
+/// `set_tier(Lobotomised)` and setting it back leaves every LATER test drawing
+/// at T3. That is how one real disagreement in this test turned into three
+/// failures elsewhere and sent me looking in the wrong place.
+struct RestoreTier;
+impl Drop for RestoreTier {
+    fn drop(&mut self) {
+        // Declared before the guard in the test, so it drops after it — the
+        // lock is free by the time we get here, and `painter()` recovers from
+        // poisoning.
+        painter().set_tier(Tier::Full, &TierReason::Idle);
+    }
+}
+
 #[test]
 fn t3_draws_sprites_and_refuses_everything_else() {
+    let _restore = RestoreTier;
     let mut p = painter();
     let mut scene = Scene::new();
     scene.fill_rect(Rect::from_size(24.0, 24.0), Radius::SM, palette::CYAN);
@@ -487,7 +504,8 @@ fn t3_draws_sprites_and_refuses_everything_else() {
 
     let target = p.offscreen(64, 64).unwrap();
     let mut s = Scene::new();
-    // A vector fill that must vanish, and a sprite that must not.
+    // A FLAT solid fill, which survives (see below); a glass toast, whose blur
+    // and gradients must be shed; and a sprite, which must draw.
     s.fill_rect(Rect::new(32.0, 32.0, 32.0, 32.0), Radius::CARD, palette::VIOLET);
     s.floating(Rect::new(0.0, 32.0, 32.0, 32.0), Floating::Toast);
     atlas.draw(&mut s, "dot", 0.0, 0.0).unwrap();
@@ -497,7 +515,14 @@ fn t3_draws_sprites_and_refuses_everything_else() {
     let img = p.read(&target).unwrap();
     dump(&img, "tier_t3");
     assert!(close(img.color(12, 12), palette::CYAN, 2), "the sprite must still draw");
-    assert_eq!(img.alpha(48, 48), 0, "the vector fill must be shed, not queued");
+    // T3's promise is "no compute passes, nothing on the discrete GPU" — it was
+    // never "nothing at all". Flat solid fills, strokes and text are a handful
+    // of trivial draw calls on the integrated GPU, which is the whole point of
+    // moving her there. This matters because T3 is exactly when a warning
+    // counts: an NX Sentry alarm arrives while the operator is in a headset,
+    // and wisp-attn already lets Alarm through at T3. The painter used to
+    // discard the resulting bubble, so she raised the alarm to nobody.
+    assert_eq!(img.alpha(48, 48), 255, "a flat solid fill still draws at T3");
     assert_eq!(p.last_blur_count(), 0, "T3 spends no blurs");
     assert_eq!(p.ssaa(), 1, "T3 does not supersample");
 

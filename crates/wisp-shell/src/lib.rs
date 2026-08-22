@@ -8,7 +8,9 @@
 //! smaller than the surface.
 
 pub mod bridge;
+pub mod bubble;
 pub mod layer;
+pub mod tell;
 
 pub use layer::{ShellConfig, WispShell};
 

@@ -748,7 +748,7 @@ impl Painter {
         let target = Rect::from_size(w as f32, h as f32);
 
         for cmd in scene.cmds() {
-            if mode == DrawMode::SpriteOnly && !cmd.is_sprite() {
+            if mode == DrawMode::SpriteOnly && !cmd.survives_lobotomy() {
                 continue;
             }
             match cmd {
