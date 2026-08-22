@@ -1,0 +1,49 @@
+#!/bin/sh
+# NX Wisp AppRun.
+#
+# Two things run this file: the AppImage runtime on a machine with libfuse2,
+# and NX Hub, which does NOT have FUSE and therefore installs by
+# `--appimage-extract` and then executes this script out of the extracted tree
+# (nx-hub SPEC, kind `appimage`). It has to work identically either way, so it
+# derives everything from its own location and inherits nothing.
+#
+# The single most important thing this script does is what it does NOT do.
+# Almost every library NX Wisp needs is opened with dlopen() at runtime and
+# MUST come from the host: the Vulkan loader, libwayland-client, libxkbcommon.
+# Point LD_LIBRARY_PATH at a bundled copy of any of those and she will run
+# perfectly on the machine that built her and fail on every other one, because
+# the loader she brought cannot see the host's ICDs and the Wayland client she
+# brought is not the one the host compositor's protocol extensions were built
+# against. So: usr/lib is APPENDED to LD_LIBRARY_PATH, never prepended, and
+# scripts/build-appimage.sh refuses to put a host-stack library in there in
+# the first place. See docs/RELEASING.md, "What is bundled and why".
+set -e
+
+HERE=$(dirname "$(readlink -f "$0")")
+
+# Always overwrite APPDIR. If NX Hub itself is running from an AppImage mount
+# it exports its own, and inheriting it would point us at the hub's tree.
+APPDIR="$HERE"
+export APPDIR
+
+export PATH="$APPDIR/usr/bin:$PATH"
+
+# Appended, and only when there is actually something in it. An empty entry in
+# LD_LIBRARY_PATH means "the current directory", which is its own bug.
+if [ -d "$APPDIR/usr/lib" ] && [ -n "$(ls -A "$APPDIR/usr/lib" 2>/dev/null)" ]; then
+    if [ -n "${LD_LIBRARY_PATH:-}" ]; then
+        export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$APPDIR/usr/lib"
+    else
+        export LD_LIBRARY_PATH="$APPDIR/usr/lib"
+    fi
+fi
+
+# So icon and desktop lookups can find what we ship. Keep the spec defaults
+# when the variable is unset, or we would delete /usr/share from the search.
+export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:$APPDIR/usr/share"
+
+# A truthful tell for the flight recorder and for bug reports: she can say she
+# is running from a bundle rather than from `cargo run`.
+export NX_WISP_PACKAGED=appimage
+
+exec "$APPDIR/usr/bin/nx-wisp" "$@"

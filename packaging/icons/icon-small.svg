@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="NX Wisp">
+  <title>NX Wisp (small sizes)</title>
+<!--
+  Small-size variant of the NX Wisp mark. Source for the 16, 24 and 32 px
+  rasters only; icon.svg is NOT used below 48px (DESIGN.md §8).
+
+  Five things in the master collapse at these sizes and are dropped here:
+
+    - the two facets and the sheen (three tonal zones inside a 16px tile leave
+      the eyes nothing to sit against),
+    - the 10-unit lit edge (it lands on one pixel and only greys the rim),
+    - the aura (a violet haze around a 16px tile reads as dirt, not as light),
+    - the core's soft falloff, replaced by one flat diagonal ramp,
+    - the pupils and their catchlights (three tones inside a 3px eye is one
+      grey dot; a solid near-white shard is an eye).
+
+  What is left is a solid lit crystal, two flat eyes and one hot cyan mote.
+  The crystal is also drawn 10% wider than the master's — with no edge and no
+  bloom carrying the silhouette, the tile can afford to spend more of the
+  raster on itself, and that is what makes 16px legible at all. Same trick,
+  same reason, as nx-hub's assets/icon-small.svg.
+
+  The body ramp is nx-hub's small-variant ramp verbatim, so every NX app reads
+  as one family in a 16px menu.
+
+  Geometry is the master's, widened about x=256 by 1.10. If you move a vertex
+  in icon.svg, move it here too.
+-->
+  <defs>
+    <linearGradient id="ws-body" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0"   stop-color="#9f63f7"/>
+      <stop offset="0.5" stop-color="#7718f2"/>
+      <stop offset="1"   stop-color="#4812a0"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M 256 15 L 410.7 103.8 L 451.4 148.2 L 475.8 259.2 L 459.5 318.4
+           L 386.2 414.6 L 337.4 451.6 L 256 496 L 174.6 451.6 L 125.8 414.6
+           L 52.5 318.4 L 36.2 259.2 L 60.6 148.2 L 101.3 103.8 Z"
+        fill="url(#ws-body)"/>
+
+  <path d="M 117 171.4 L 174.6 145.2 L 232.2 175.7 L 174.6 228.1 Z" fill="#f6f1ff"/>
+  <path d="M 279.8 175.7 L 337.4 145.2 L 395 171.4 L 337.4 228.1 Z" fill="#f6f1ff"/>
+
+  <path d="M 141.6 278 L 174.6 330 L 141.6 382 L 108.6 330 Z" fill="#00e5ff"/>
+</svg>

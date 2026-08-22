@@ -1,0 +1,82 @@
+# NX Wisp CI.
+name: ci
+
+# Deliberately NOT a release pipeline. There is no signing key on a runner and
+# this workflow never publishes; releases are cut locally with
+# scripts/release.sh (see docs/RELEASING.md). What this is for is catching a
+# tree that does not build, or packaging that produces an artifact NX Hub
+# could not install, before either reaches a laptop.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          rustc --version
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      # No Wayland, Vulkan or KDE packages are installed on purpose. Every one
+      # of those is dlopen'd at runtime and must come from the host, so if the
+      # build starts needing one of them at LINK time that is a real change in
+      # the dependency shape and CI should be the thing that notices.
+      - name: Build
+        run: cargo build --release --workspace
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+        continue-on-error: true
+
+      - name: Clippy
+        run: cargo clippy --release --workspace --all-targets
+        continue-on-error: true
+
+      # SPEC §4 puts the compositor tests against a nested kwin_wayland and the
+      # GPU tests against a real device. A stock runner has neither, and a
+      # partial suite here would be a false green, so the suite is a local
+      # gate. Only the pure modules could run here; wire them up as a separate
+      # filtered job if that ever earns its keep.
+
+      # build-appimage.sh sources env.sh only when the toolchain it names is
+      # actually present, so on a runner it falls through to rustup's stable.
+      - name: Package
+        run: scripts/build-appimage.sh --no-build
+
+      - name: Smoke check
+        # No signing key on a runner, so the .sha256/.sig checks warn rather
+        # than fail. --lax-version until `wisp` implements --version; see
+        # docs/RELEASING.md, "Known gap".
+        run: scripts/smoke.sh --lax-version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nx-wisp-appimage
+          path: |
+            dist/*.AppImage
+          if-no-files-found: error
+          retention-days: 14

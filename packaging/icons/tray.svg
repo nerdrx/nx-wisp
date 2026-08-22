@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="NX Wisp">
+  <title>NX Wisp (tray)</title>
+<!--
+  Tray variant. DESIGN.md §8 makes all three variants mandatory, so it exists
+  even though NX Wisp has no tray icon today — she IS the visible surface, and
+  a layer-shell creature has nowhere to minimise to. If a tray tell is ever
+  added for SPEC §0.3 (mic/clipboard/screen live), this is the file.
+
+  Flat brand violet, everything else knocked out with fill-rule="evenodd" so
+  the eyes and the mote are holes rather than painted shapes. That is what
+  survives an OS tinting the icon monochrome on a light or a dark tray: there
+  is exactly one filled region and no second colour to lose.
+
+  Geometry is the small variant's — wider crystal, no edge, no facets.
+-->
+  <path fill="#7700ff" fill-rule="evenodd"
+        d="M 256 15 L 410.7 103.8 L 451.4 148.2 L 475.8 259.2 L 459.5 318.4
+           L 386.2 414.6 L 337.4 451.6 L 256 496 L 174.6 451.6 L 125.8 414.6
+           L 52.5 318.4 L 36.2 259.2 L 60.6 148.2 L 101.3 103.8 Z
+           M 117 171.4 L 174.6 145.2 L 232.2 175.7 L 174.6 228.1 Z
+           M 279.8 175.7 L 337.4 145.2 L 395 171.4 L 337.4 228.1 Z
+           M 141.6 278 L 174.6 330 L 141.6 382 L 108.6 330 Z"/>
+</svg>

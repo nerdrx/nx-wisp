@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="NX Wisp">
+  <title>NX Wisp</title>
+<!--
+  NX Wisp — master app mark (48px and up).
+
+  This is *her*: the default skin's `shell`, `core`, `spark`, `facet_light`,
+  `facet_shadow`, `sheen`, eyes and lit `edge`, taken from
+  crates/wisp-rig/skins/wisp.skin.toml and mapped from that file's 256x256
+  canvas onto 512x512 with a single uniform scale
+
+      X = 256 + (x - 128) * 3.7          Y = 15 + (y - 46) * 3.7
+
+  Uniform, not stretched: her silhouette is a faceted crystal and the moment
+  the two axes disagree the cut corners stop reading as cuts. The crystal
+  therefore fills the tile vertically (15..496) and leaves 56px of air either
+  side, which is where the aura lives.
+
+  What this satisfies:
+    - DESIGN.md §8 — a pointy-top hexagon, never flat-top. Her shell already
+      is one: a vertex at top centre and bottom centre, the four side corners
+      cut rather than rounded, fourteen straight edges, no curve anywhere.
+    - DESIGN.md §8 — an app's own mark is never replaced by the NX hexagon, so
+      there is no NX monogram here. She is the mark.
+    - DESIGN.md §1 — violet leads, cyan is light *inside* the material. The
+      only cyan is the `spark` burning under the glass and one 26/255 breath
+      of it in the lit edge. There is no cyan surface.
+    - DESIGN.md §3 — one light source, upper-left. Every gradient runs from
+      (56,15) toward (456,496) or is centred above and left of what it lights.
+
+  Deliberate departures from the skin, all icon-only and all for legibility at
+  tile size (the first faithful transcription rendered as a dark blob):
+
+    1. Her tail is dropped. It leaves the skin canvas below y=252 and an icon
+       wants a closed silhouette inside its box.
+    2. The core is a soft glow across the whole shell rather than the skin's
+       inner crystal, and sits higher, so violet reaches *behind* the eyes
+       instead of pooling under them. At skin scale the dark upper body reads
+       as glass; at 48px it read as a hood, and the inner crystal's own hard
+       outline read as a snout.
+    3. The spark is smaller and pushed left, off the midline. Centred and
+       low it read as a mouth, which she does not have.
+    4. The eyes are ~18% larger. She is a creature and she is meant to be cute
+       (SPEC §3.5b); the skin's eye is sized for a 128px body seen in motion,
+       and a static tile needs more white around the pupil.
+    5. Each pupil gets a catchlight, upper-left like every other light here.
+    6. The body ramp is lifted about one step (#38255e/#26193f/#150d28 against
+       the skin's #2e1e4e/#20153a/#100a1e) so the lit facet has something to
+       sit on and the bottom-right does not go to black.
+
+  Below 48px this file is NOT used — see icon-small.svg. DESIGN.md §8 forbids
+  scaling a master that far and it is right: the sheen, both facets and the
+  lit edge collapse into one grey smudge at 32px.
+
+  Regenerate the rasters with scripts/gen-icons.sh after editing.
+-->
+  <defs>
+    <!-- The violet bloom she sits in. skin: gradient "aura", radius pulled in
+         so it dies inside the tile with no cut edge. -->
+    <radialGradient id="w-aura" gradientUnits="userSpaceOnUse"
+        cx="256" cy="266.6" r="250" fx="174.6" fy="170.4">
+      <stop offset="0"    stop-color="#7700ff" stop-opacity="0.340"/>
+      <stop offset="0.42" stop-color="#7700ff" stop-opacity="0.170"/>
+      <stop offset="0.72" stop-color="#7700ff" stop-opacity="0.062"/>
+      <stop offset="1"    stop-color="#7700ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- skin: gradient "glass_body", lifted one step. Opaque, because
+         DESIGN.md v1.5 §4 makes structural surfaces opaque elevation steps. -->
+    <linearGradient id="w-body" gradientUnits="userSpaceOnUse"
+        x1="56.2" y1="15" x2="455.8" y2="496">
+      <stop offset="0"    stop-color="#38255e"/>
+      <stop offset="0.34" stop-color="#26193f"/>
+      <stop offset="1"    stop-color="#150d28"/>
+    </linearGradient>
+
+    <!-- skin: gradient "core" — the violet heart, glowing from inside.
+         Painted over the whole clipped shell rather than onto the skin's inner
+         crystal: a hard-edged inner hexagon filled with a still-saturated
+         radial drew its own outline, and at tile size that second silhouette
+         read as a snout between the eyes. -->
+    <radialGradient id="w-core" gradientUnits="userSpaceOnUse"
+        cx="256" cy="262" r="232" fx="186" fy="168">
+      <stop offset="0"    stop-color="#9a3cff" stop-opacity="0.950"/>
+      <stop offset="0.30" stop-color="#9a3cff" stop-opacity="0.800"/>
+      <stop offset="0.58" stop-color="#7700ff" stop-opacity="0.620"/>
+      <stop offset="0.85" stop-color="#7700ff" stop-opacity="0.180"/>
+      <stop offset="1"    stop-color="#7700ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- skin: gradient "spark" — the cyan mote moving inside her. -->
+    <radialGradient id="w-spark" gradientUnits="userSpaceOnUse"
+        cx="152" cy="330" r="58" fx="138" fy="308">
+      <stop offset="0"    stop-color="#e6fcff" stop-opacity="0.920"/>
+      <stop offset="0.32" stop-color="#00e5ff" stop-opacity="0.720"/>
+      <stop offset="0.68" stop-color="#00e5ff" stop-opacity="0.260"/>
+      <stop offset="1"    stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- skin: gradient "facet_light" — the plane the light falls on. -->
+    <linearGradient id="w-facet-l" gradientUnits="userSpaceOnUse"
+        x1="137.6" y1="22.4" x2="233.8" y2="259.2">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.200"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0.071"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- skin: gradient "facet_shadow" — same light, other side. -->
+    <linearGradient id="w-facet-s" gradientUnits="userSpaceOnUse"
+        x1="337.4" y1="237" x2="448.4" y2="444.2">
+      <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.360"/>
+    </linearGradient>
+
+    <!-- skin: gradient "sheen" — the specular band. -->
+    <linearGradient id="w-sheen" gradientUnits="userSpaceOnUse"
+        x1="93.2" y1="52" x2="322.6" y2="303.6">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.44" stop-color="#ffffff" stop-opacity="0.200"/>
+      <stop offset="0.6"  stop-color="#d6beff" stop-opacity="0.100"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- skin: gradient "edge_lit", DESIGN.md's lit-edge token. Bright
+         top-left, violet, a breath of cyan, then dark. -->
+    <linearGradient id="w-edge" gradientUnits="userSpaceOnUse"
+        x1="56.2" y1="15" x2="455.8" y2="496">
+      <stop offset="0"    stop-color="#e2c8ff" stop-opacity="0.800"/>
+      <stop offset="0.28" stop-color="#9a3cff" stop-opacity="0.400"/>
+      <stop offset="0.50" stop-color="#00e5ff" stop-opacity="0.110"/>
+      <stop offset="0.72" stop-color="#000000" stop-opacity="0.280"/>
+      <stop offset="1"    stop-color="#000000" stop-opacity="0.420"/>
+    </linearGradient>
+
+    <!-- Everything inside the glass is clipped to the glass. -->
+    <clipPath id="w-clip">
+      <path d="M 256 15 L 396.6 103.8 L 433.6 148.2 L 455.8 259.2 L 441 318.4
+               L 374.4 414.6 L 330 451.6 L 256 496 L 182 451.6 L 137.6 414.6
+               L 71 318.4 L 56.2 259.2 L 78.4 148.2 L 115.4 103.8 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- the bloom (skin: below everything, and click-through in the app) -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#w-aura)"/>
+
+  <!-- the shell (skin z=10, silhouette) -->
+  <path d="M 256 15 L 396.6 103.8 L 433.6 148.2 L 455.8 259.2 L 441 318.4
+           L 374.4 414.6 L 330 451.6 L 256 496 L 182 451.6 L 137.6 414.6
+           L 71 318.4 L 56.2 259.2 L 78.4 148.2 L 115.4 103.8 Z"
+        fill="url(#w-body)"/>
+
+  <g clip-path="url(#w-clip)">
+    <!-- core (z=14) -->
+    <rect x="0" y="0" width="512" height="512" fill="url(#w-core)"/>
+    <!-- spark (z=16) -->
+    <path d="M 152 258 L 198 330 L 152 402 L 106 330 Z" fill="url(#w-spark)"/>
+    <!-- lit facet (z=18) -->
+    <path d="M 256 15 L 115.4 103.8 L 78.4 148.2 L 204.2 237 Z"
+          fill="url(#w-facet-l)"/>
+    <!-- shadowed facet (z=19) -->
+    <path d="M 455.8 259.2 L 441 318.4 L 374.4 414.6 L 293 325.8 Z"
+          fill="url(#w-facet-s)"/>
+    <!-- sheen (z=20) -->
+    <path d="M 256 15 L 115.4 103.8 L 167.2 259.2 L 270.8 126 Z"
+          fill="url(#w-sheen)" opacity="0.9"/>
+
+    <!-- eyes (z=24): two cut shards, not circles -->
+    <path d="M 129.6 171.4 L 182 145.2 L 234.4 175.7 L 182 228.1 Z" fill="#efeaff"/>
+    <path d="M 277.6 175.7 L 330 145.2 L 382.4 171.4 L 330 228.1 Z" fill="#efeaff"/>
+    <!-- pupils (z=25) -->
+    <path d="M 160.2 175.7 L 190.7 158.3 L 212.6 184.5 L 182 215 Z" fill="#1a0f30"/>
+    <path d="M 299.4 184.5 L 321.3 158.3 L 351.8 175.7 L 330 215 Z" fill="#1a0f30"/>
+    <!-- catchlights -->
+    <path d="M 169 175 L 178 170 L 183 176 L 174 182 Z" fill="#efeaff" opacity="0.85"/>
+    <path d="M 329 176 L 334 170 L 343 175 L 338 182 Z" fill="#efeaff" opacity="0.85"/>
+  </g>
+
+  <!-- the lit edge (z=30). One stroke of gradient border; this is the detail
+       that makes her read as glass and not as flat vector art at 512px. -->
+  <path d="M 256 15 L 396.6 103.8 L 433.6 148.2 L 455.8 259.2 L 441 318.4
+           L 374.4 414.6 L 330 451.6 L 256 496 L 182 451.6 L 137.6 414.6
+           L 71 318.4 L 56.2 259.2 L 78.4 148.2 L 115.4 103.8 Z"
+        fill="none" stroke="url(#w-edge)" stroke-width="10" stroke-linejoin="miter"/>
+</svg>

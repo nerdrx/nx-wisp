@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata. appimagetool looks for a file under usr/share/metainfo
+  and will validate it if appstreamcli is installed; scripts/build-appimage.sh
+  passes -n so a machine without appstreamcli still cuts a release.
+
+  The component id matches the D-Bus name wisp-senses already owns
+  (org.nx.Wisp.Senses, crates/wisp-senses/src/kwin/script.rs), so she has one
+  identity on the bus, in AppStream and in the desktop file.
+
+  @VERSION@ and @DATE@ are substituted by scripts/build-appimage.sh from the
+  workspace Cargo.toml. Do not hardcode a version here.
+-->
+<component type="desktop-application">
+  <id>org.nx.Wisp</id>
+  <name>NX Wisp</name>
+  <summary>A creature that lives on your desktop</summary>
+  <developer id="io.github.nerdrx">
+    <name>nerdrx</name>
+  </developer>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <launchable type="desktop-id">nx-wisp.desktop</launchable>
+  <description>
+    <p>
+      NX Wisp is a desktop companion for KDE Plasma on Wayland. She walks
+      around your screen, sits on your windows, watches what your machine is
+      doing, thinks with a local language model, and talks to you — and she
+      gets out of the way completely the moment you need your GPU back.
+    </p>
+    <p>
+      Everything happens on your machine. There is no telemetry and no cloud
+      inference. A five-tier resource governor unloads her brain and moves her
+      rendering to the integrated GPU the moment a game or a VR session
+      starts, and gives it all back when you are done.
+    </p>
+    <p>Requires KDE Plasma 6 on Wayland and a Vulkan-capable GPU.</p>
+  </description>
+  <url type="homepage">https://github.com/nerdrx/nx-wisp</url>
+  <url type="bugtracker">https://github.com/nerdrx/nx-wisp/issues</url>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=NX Wisp
+GenericName=Desktop companion
+Comment=A creature that lives on your desktop.
+Exec=nx-wisp
+Icon=nx-wisp
+Terminal=false
+Categories=Utility;
+Keywords=companion;assistant;pet;wisp;nx;
+StartupNotify=false
+StartupWMClass=nx-wisp
+X-NX-App=nx-wisp

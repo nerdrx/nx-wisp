@@ -139,5 +139,11 @@ M4 it pays attention · M5 it joins the fleet · M6 extras. Full detail in
 `nx-wisp-plan.md` (F1–F76).
 
 **Release early and often.** Every milestone ships a real release through NX Hub:
-AppImage (extract-install; CachyOS has no libfuse2) + `.sha256` + ed25519 `.sig`
-using the shared key at `tools/nx-signing`.
+AppImage (extract-install; CachyOS has no libfuse2) + `.sha256` + ed25519 `.sig`.
+
+The shared signing key lives at `/run/media/nerdrx/Lex/claude/tools/nx-signing/`
+— **outside every git repository, and it must stay that way.** Earlier wording
+here said "`tools/nx-signing`", which reads as repo-relative; do not create such
+a directory in this repo or copy the key into it. The public half is pinned in
+NX Hub's `provenance.js` and re-pinned in `scripts/smoke.sh`, so a swapped key
+fails at build time rather than at install time.
