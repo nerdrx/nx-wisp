@@ -3,3 +3,11 @@ name = "wisp-attn"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "The attention economy: interruption budget, flow detection, behaviour trees."
+
+[dependencies]
+wisp-proto = { path = "../wisp-proto" }
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1"
