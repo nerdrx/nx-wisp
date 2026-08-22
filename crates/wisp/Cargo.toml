@@ -3,7 +3,44 @@ name = "wisp"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "The NX Wisp host process: wiring, event loop, CLI, config and the flight recorder."
+
+[lib]
+name = "wisp"
+path = "src/lib.rs"
 
 [[bin]]
 name = "nx-wisp"
 path = "src/main.rs"
+
+[dependencies]
+wisp-proto  = { path = "../wisp-proto" }
+wisp-gov    = { path = "../wisp-gov" }
+wisp-senses = { path = "../wisp-senses" }
+wisp-attn   = { path = "../wisp-attn" }
+wisp-fleet  = { path = "../wisp-fleet" }
+wisp-rig    = { path = "../wisp-rig" }
+
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+tokio = { version = "1.53.1", features = [
+    "rt-multi-thread",
+    "sync",
+    "time",
+    "macros",
+    "fs",
+    "signal",
+] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+anyhow = "1.0.100"
+libc = "0.2.189"
+
+# `doctor` asks the compositor which globals it advertises. Registry
+# enumeration only: this crate never creates a surface — that is `wisp-shell`'s
+# and only `wisp-shell`'s.
+wayland-client = "0.31.11"
+
+[dev-dependencies]
+tempfile = "3.23.0"
+tokio = { version = "1.53.1", features = ["test-util"] }

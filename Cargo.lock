@@ -2690,6 +2690,23 @@ dependencies = [
 [[package]]
 name = "wisp"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "libc",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "wayland-client",
+ "wisp-attn",
+ "wisp-fleet",
+ "wisp-gov",
+ "wisp-proto",
+ "wisp-rig",
+ "wisp-senses",
+]
 
 [[package]]
 name = "wisp-attn"
