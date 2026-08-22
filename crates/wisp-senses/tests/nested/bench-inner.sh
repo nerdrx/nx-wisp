@@ -5,6 +5,9 @@ SOCKET="nxwisp-bench-$$"
 export WAYLAND_DISPLAY="$SOCKET"
 export QT_QPA_PLATFORM=wayland
 
+# Kill the nested compositor on every exit path, not just the happy one.
+trap 'kill "${KWIN:-}" 2>/dev/null; wait "${KWIN:-}" 2>/dev/null' EXIT INT TERM
+
 kwin_wayland --virtual --width 1920 --height 1080 --no-global-shortcuts \
     --socket "$SOCKET" -- kwrite >/tmp/nx-wisp-bench-kwin.log 2>&1 &
 KWIN=$!
@@ -31,3 +34,8 @@ done
 scripting unloadScript s nxwisp-bench 2>/dev/null
 kill "$KWIN" 2>/dev/null
 wait "$KWIN" 2>/dev/null
+
+# We killed KWin on purpose, so `wait` hands back 128+signal. Exiting on that
+# would report a clean sweep as a failure, which is exactly the kind of noise
+# that trains you to ignore a harness.
+exit 0
