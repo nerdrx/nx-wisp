@@ -1,3 +1,35 @@
 [workspace]
 resolver = "2"
-members = ["spike"]
+members = ["crates/*", "spike"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+wisp-proto  = { path = "crates/wisp-proto" }
+wisp-theme  = { path = "crates/wisp-theme" }
+wisp-paint  = { path = "crates/wisp-paint" }
+wisp-shell  = { path = "crates/wisp-shell" }
+wisp-rig    = { path = "crates/wisp-rig" }
+wisp-editor = { path = "crates/wisp-editor" }
+wisp-gov    = { path = "crates/wisp-gov" }
+wisp-mind   = { path = "crates/wisp-mind" }
+wisp-senses = { path = "crates/wisp-senses" }
+wisp-voice  = { path = "crates/wisp-voice" }
+wisp-attn   = { path = "crates/wisp-attn" }
+wisp-fleet  = { path = "crates/wisp-fleet" }
+
+# pinned once here so every crate agrees
+wgpu = "30.0"
+smithay-client-toolkit = { version = "0.21", features = ["system"] }
+wayland-client = "0.31"
+raw-window-handle = "0.6"
+pollster = "1.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time", "macros", "fs", "process"] }
+tracing = "0.1"
+anyhow = "1"
+thiserror = "2"

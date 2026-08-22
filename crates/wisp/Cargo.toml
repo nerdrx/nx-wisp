@@ -1,0 +1,9 @@
+[package]
+name = "wisp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "nx-wisp"
+path = "src/main.rs"

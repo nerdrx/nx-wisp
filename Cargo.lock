@@ -1572,6 +1572,61 @@ dependencies = [
 ]
 
 [[package]]
+name = "wisp"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-attn"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-editor"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-fleet"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-gov"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-mind"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-paint"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-proto"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "wisp-rig"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-senses"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-shell"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-theme"
+version = "0.1.0"
+
+[[package]]
+name = "wisp-voice"
+version = "0.1.0"
+
+[[package]]
 name = "xcursor"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
