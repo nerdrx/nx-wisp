@@ -110,7 +110,16 @@ if [[ $NO_BUILD -eq 0 ]]; then
     # without the staged Vulkan SDK can still cut a mock-brained build.
     FEATURES="${WISP_FEATURES:-full}"
     echo "==> cargo build --release -p wisp --features $FEATURES"
-    cargo build --release -p wisp --features "$FEATURES"
+    # espeak-ng's cmake data target has a parallel-make race (its own Makefile
+    # forces -j into a submake, and the data rule can run before phsource has
+    # been copied — "Error processing file '…/phsource/intonation'"). The
+    # failure is timing-dependent and the partial build persists, so one retry
+    # continues from cached state and completes. Two failures in a row is a
+    # real error and stops the release.
+    if ! cargo build --release -p wisp --features "$FEATURES"; then
+        echo "==> build failed once (espeak-ng data race is the known cause); retrying"
+        cargo build --release -p wisp --features "$FEATURES"
+    fi
 fi
 
 BIN="target/release/$BIN_NAME"
