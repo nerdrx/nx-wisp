@@ -352,8 +352,13 @@ async fn when_she_is_out_of_her_depth_she_says_so_instead_of_making_something_up
         .expect("think");
     match &t {
         Thought::OutOfDepth(u) => {
+            // The message must be honest AND carry its remedy — post-0.7.1
+            // wording names the exact command that would add the next rung.
             assert!(
-                u.text.contains("not switched on") || u.text.contains("do not know"),
+                u.text.contains("models fetch")
+                    || u.text.contains("model.big_brain")
+                    || u.text.contains("do not know")
+                    || u.text.contains("do not see Claude"),
                 "{}",
                 u.text
             );

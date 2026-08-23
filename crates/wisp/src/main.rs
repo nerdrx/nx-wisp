@@ -18,6 +18,9 @@ fn main() -> ExitCode {
     };
 
     init_tracing(&invocation);
+    // Keep `nx-wisp` on PATH for hub installs — best-effort, marker-guarded,
+    // and free when nothing changed.
+    wisp::shim::refresh();
 
     match wisp::cli::dispatch(invocation) {
         Ok(code) => ExitCode::from(code.clamp(0, 255) as u8),

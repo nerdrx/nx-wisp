@@ -283,7 +283,10 @@ pub fn out_of_depth(tried: &[Rung], a: Available, big_brain_installed: bool) -> 
     let remedy = if tried.contains(&Rung::BigBrain) {
         None
     } else if !a.deliberate {
-        Some("My bigger model is not fetched — `nx-wisp models fetch` gets it.")
+        Some(
+            "My bigger model is not fetched. Ask me to fetch it (with \
+             model.allow_downloads on), or run `nx-wisp models fetch`.",
+        )
     } else if !a.big_brain {
         if big_brain_installed {
             Some(

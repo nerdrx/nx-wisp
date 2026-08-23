@@ -32,72 +32,9 @@ use wisp_proto::Consent;
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(45);
 const LOG_CAP: usize = 64;
 
-pub type ToolFuture = Pin<Box<dyn std::future::Future<Output = ToolOutcome> + Send>>;
-pub type ToolFn = Arc<dyn Fn(Value) -> ToolFuture + Send + Sync>;
-
-/// Everything `wisp-mind` needs to offer a tool to the model.
-#[derive(Clone)]
-pub struct ToolDescriptor {
-    pub name: &'static str,
-    pub description: &'static str,
-    /// SPEC §3.7. `Ambient` may run unprompted; `Explicit` must be enabled by
-    /// the operator first. Nothing here is `Invasive`.
-    pub consent: Consent,
-    /// JSON Schema for the arguments object.
-    pub parameters: Value,
-    pub invoke: ToolFn,
-}
-
-impl std::fmt::Debug for ToolDescriptor {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ToolDescriptor")
-            .field("name", &self.name)
-            .field("consent", &self.consent)
-            .field("parameters", &self.parameters)
-            .finish_non_exhaustive()
-    }
-}
-
-/// What came back. `unavailable` is the "NX Hub is not installed" case and is
-/// deliberately distinct from a failure: there is nothing wrong, there is just
-/// no fleet here.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ToolOutcome {
-    pub ok: bool,
-    pub unavailable: bool,
-    /// One line she can actually say.
-    pub summary: String,
-    /// The CLI's `--json`, parsed, when it produced any.
-    pub json: Option<Value>,
-    pub exit_code: Option<i32>,
-}
-
-impl ToolOutcome {
-    fn unavailable(reason: impl Into<String>) -> Self {
-        Self {
-            ok: false,
-            unavailable: true,
-            summary: reason.into(),
-            json: None,
-            exit_code: None,
-        }
-    }
-    fn failed(summary: impl Into<String>, exit_code: Option<i32>) -> Self {
-        Self { ok: false, unavailable: false, summary: summary.into(), json: None, exit_code }
-    }
-}
-
-/// One line of the flight recorder's tool trace. The binary turns these into
-/// `EventKind::ToolCall`.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ToolInvocation {
-    pub name: String,
-    /// The exact argv handed to the CLI — not a paraphrase of it.
-    pub argv: Vec<String>,
-    pub ok: bool,
-    pub unavailable: bool,
-    pub detail: String,
-}
+/// SPEC §3.7's shapes moved to `wisp-proto` (they are contract, not fleet
+/// behaviour); re-exported here so existing imports keep working.
+pub use wisp_proto::{ToolDescriptor, ToolFn, ToolFuture, ToolInvocation, ToolOutcome};
 
 type Recorder = Arc<dyn Fn(ToolInvocation) + Send + Sync>;
 

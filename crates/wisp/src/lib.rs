@@ -65,6 +65,7 @@ pub mod models_cmd;
 #[cfg(feature = "voice-piper")]
 pub mod voice_host;
 pub mod shell_layer;
+pub mod shim;
 pub mod state;
 
 #[cfg(test)]

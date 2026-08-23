@@ -655,6 +655,17 @@ pub struct Builtins {
     pub memory: MemoryHandle,
     pub files: Arc<FileSearch>,
     pub media: Arc<dyn MediaSink>,
+    /// Completions from background work (the model fetch), drained by
+    /// `Mind::tick` into proposals the same way due timers are.
+    pub notices: Arc<Mutex<Vec<Notice>>>,
+}
+
+/// Something a background job finished and wants said. `answer` marks it as
+/// the operator having asked for it — an `Answer` skips the attention budget.
+#[derive(Debug, Clone)]
+pub struct Notice {
+    pub text: String,
+    pub answer: bool,
 }
 
 impl Builtins {
@@ -664,6 +675,7 @@ impl Builtins {
             memory,
             files: Arc::new(FileSearch::default()),
             media: Arc::new(NoMedia),
+            notices: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -689,6 +701,103 @@ impl Builtins {
     /// Timers that have come due, for the event loop to turn into utterances.
     pub fn due_timers(&self, now_ms: i64) -> Vec<Timer> {
         lock(&self.timers).due(now_ms)
+    }
+
+    /// Background completions, same contract as `due_timers`.
+    pub fn due_notices(&self) -> Vec<Notice> {
+        std::mem::take(&mut *lock(&self.notices))
+    }
+}
+
+/// F55, from the inside: she fetches her own models when asked to.
+///
+/// The tool is `Ambient` so the model may *call* it, but it acts only when
+/// `allow_downloads` is on — SPEC §0.2(a)'s consent is the config key, and
+/// the refusal names it. The fetch runs on its own thread (a 19 GB download
+/// must not block thinking); completion lands in `notices`, which the next
+/// `tick` turns into a proposal.
+pub fn fetch_models_tool(
+    registry: crate::models::ModelRegistry,
+    settings: crate::manager::ModelSettings,
+    notices: Arc<Mutex<Vec<Notice>>>,
+) -> ToolDescriptor {
+    use crate::backend::Role;
+    let busy = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    ToolDescriptor {
+        name: "fetch_models",
+        description: "Download the language models she is missing (pinned URLs,                       pinned hashes). Needs model.allow_downloads. Reports when done.",
+        consent: wisp_proto::Consent::Ambient,
+        parameters: serde_json::json!({
+            "type": "object", "properties": {}, "additionalProperties": false
+        }),
+        invoke: Arc::new(move |_v| {
+            let registry = registry.clone();
+            let settings = settings.clone();
+            let notices = notices.clone();
+            let busy = busy.clone();
+            Box::pin(async move {
+                if !settings.allow_downloads {
+                    return ToolOutcome::failed(
+                        "Downloads are switched off. `nx-wisp config set                          model.allow_downloads true` is the consent, then ask me again.",
+                        None,
+                    );
+                }
+                if busy.swap(true, std::sync::atomic::Ordering::SeqCst) {
+                    return ToolOutcome::success("I am already fetching them.", None);
+                }
+                let missing: Vec<String> = [Role::Reflex, Role::Deliberate, Role::Embed]
+                    .into_iter()
+                    .filter_map(|r| registry.default_for(r))
+                    .filter(|e| !e.looks_present(&settings.models_dir))
+                    .map(|e| e.name.clone())
+                    .collect();
+                if missing.is_empty() {
+                    busy.store(false, std::sync::atomic::Ordering::SeqCst);
+                    return ToolOutcome::success("Everything is already here.", None);
+                }
+                let total_mib: u64 = missing
+                    .iter()
+                    .filter_map(|n| registry.get(n))
+                    .map(|e| e.size_mib())
+                    .sum();
+                std::thread::Builder::new()
+                    .name("wisp-fetch".into())
+                    .spawn(move || {
+                        let fetcher = crate::fetch::Fetcher::real(true);
+                        let wanted: Vec<_> =
+                            missing.iter().filter_map(|n| registry.get(n)).collect();
+                        let mut ok = 0usize;
+                        let mut failed: Vec<String> = Vec::new();
+                        for (name, r) in
+                            fetcher.ensure_all(&wanted, &settings.models_dir, &mut |_| {})
+                        {
+                            match r {
+                                Ok(_) => ok += 1,
+                                Err(e) => failed.push(format!("{name}: {e}")),
+                            }
+                        }
+                        let text = if failed.is_empty() {
+                            format!("The models are here — {ok} fetched and verified. Ask me again.")
+                        } else {
+                            format!(
+                                "Fetching finished with trouble: {} arrived, and then {}",
+                                ok,
+                                failed.join("; ")
+                            )
+                        };
+                        lock(&notices).push(Notice { text, answer: true });
+                        busy.store(false, std::sync::atomic::Ordering::SeqCst);
+                    })
+                    .ok();
+                ToolOutcome::success(
+                    format!(
+                        "On it — about {} GiB from pinned URLs. I will say when it is done.",
+                        (total_mib / 1024).max(1)
+                    ),
+                    None,
+                )
+            })
+        }),
     }
 }
 

@@ -43,7 +43,7 @@ use wisp_proto::{Consent, EventKind};
 
 // The descriptor type is `wisp-fleet`'s, not a copy of it. See the crate docs'
 // note on the SPEC §2 dependency edge that costs.
-pub use wisp_fleet::tools::{ToolDescriptor, ToolFn, ToolFuture, ToolInvocation, ToolOutcome};
+pub use wisp_proto::{ToolDescriptor, ToolFn, ToolFuture, ToolInvocation, ToolOutcome};
 
 use crate::error::{MindError, Result};
 use crate::events::EventSink;

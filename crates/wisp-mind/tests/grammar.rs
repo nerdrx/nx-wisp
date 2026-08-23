@@ -7,7 +7,8 @@
 //! grammar rejects is a document the model provably cannot emit.
 
 use serde_json::{json, Value};
-use wisp_fleet::tools::{NxTools, ToolDescriptor};
+use wisp_fleet::tools::NxTools;
+use wisp_proto::ToolDescriptor;
 use wisp_mind::grammar::{
     enum_grammar, reply_grammar, schema_grammar, tool_grammar, Grammar, GrammarOptions, ToolCall,
 };
@@ -310,7 +311,7 @@ fn descriptors_from_two_sources_can_share_one_grammar() {
         }),
         invoke: std::sync::Arc::new(|_| {
             Box::pin(async {
-                wisp_fleet::tools::ToolOutcome {
+                wisp_proto::ToolOutcome {
                     ok: true,
                     unavailable: false,
                     summary: String::new(),

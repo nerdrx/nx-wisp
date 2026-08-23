@@ -223,6 +223,14 @@ impl MindBuilder {
             self.clock.clone(),
         );
         let builtins = Builtins::new(handle.clone());
+        // F55 from the inside: she can fetch her own models when asked.
+        // Registered with clones because the manager takes registry and
+        // settings by value next.
+        let fetch_tool = crate::tools::builtin::fetch_models_tool(
+            self.registry.clone(),
+            self.settings.clone(),
+            Arc::clone(&builtins.notices),
+        );
         let manager = ModelManager::shared(
             Arc::new(Mutex::new(self.backend)),
             self.registry,
@@ -234,7 +242,9 @@ impl MindBuilder {
         if let Some(p) = self.tool_state {
             tools = tools.with_state_file(p);
         }
-        for (name, r) in tools.register_all(builtins.descriptors()) {
+        for (name, r) in tools.register_all(
+            builtins.descriptors().into_iter().chain([fetch_tool]),
+        ) {
             if let Err(e) = r {
                 // A built-in that will not register is a bug in this crate, not
                 // a runtime condition. Loud, and then carry on without it: she
@@ -375,6 +385,13 @@ impl Mind {
     pub fn tick(&mut self, now: Millis) {
         if let Some((mood, why)) = self.mood.tick(now) {
             self.on_mood_change(mood, why);
+        }
+        for n in self.builtins.due_notices() {
+            let urgency = if n.answer { Urgency::Answer } else { Urgency::Notable };
+            self.propose(Utterance {
+                expression: Some(self.mood.expression().to_string()),
+                ..Utterance::new(n.text, urgency)
+            });
         }
         for t in self.builtins.due_timers(self.memory.clock().now()) {
             // A timer the operator set is something they asked for, so it is an

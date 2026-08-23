@@ -27,7 +27,7 @@
 use std::collections::BTreeMap;
 
 use serde_json::{Map, Value};
-use wisp_fleet::tools::ToolDescriptor;
+use wisp_proto::ToolDescriptor;
 
 use crate::error::{MindError, Result};
 
