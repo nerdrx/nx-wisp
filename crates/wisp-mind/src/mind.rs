@@ -25,7 +25,7 @@ use wisp_proto::{Cost, EventKind, Governed, Millis, Observation, Tier, TierReaso
 use crate::backend::{Backend, GenRequest, Generated, Role, Sampling, SlotId};
 use crate::defer::{DeferQueue, Job, JobKind, Pushed, Replayed};
 use crate::error::{MindError, Result};
-use crate::escalate::{Ask, Ladder, Rung, SelfAssessment};
+use crate::escalate::{Ask, Available, Ladder, Rung, SelfAssessment};
 use crate::events::EventSink;
 use crate::grammar::{GrammarOptions, ToolCall};
 use crate::kv::{ConversationId, KvCache};
@@ -435,7 +435,7 @@ impl Mind {
         let Ok(handle) = reflex else {
             // Nothing is loaded and nothing can be. That is an honest "I can't",
             // not a crash and not a guess.
-            let v = self.ladder.give_up(&[]);
+            let v = self.ladder.give_up(&[], available);
             let u = v.utterance();
             self.propose(u.clone());
             return Ok(Thought::OutOfDepth(u));
@@ -457,7 +457,7 @@ impl Mind {
                     // answering anyway with the model that has just told her it
                     // is out of its depth.
                     _ => {
-                        let v = self.ladder.give_up(&[Rung::Reflex]);
+                        let v = self.ladder.give_up(&[Rung::Reflex], available);
                         let u = v.utterance();
                         self.propose(u.clone());
                         return Ok(Thought::OutOfDepth(u));
@@ -630,7 +630,11 @@ impl Mind {
         }
         // Absent, switched off, or it failed. Either way she does not know, and
         // says so (F17).
-        let v = self.ladder.give_up(&[Rung::Reflex, Rung::Deliberate, Rung::BigBrain]);
+        // Everything was nominally available; it just did not produce an answer.
+        let v = self.ladder.give_up(
+            &[Rung::Reflex, Rung::Deliberate, Rung::BigBrain],
+            Available { reflex: true, deliberate: true, big_brain: true },
+        );
         let u = v.utterance();
         self.propose(u.clone());
         Ok(Thought::OutOfDepth(u))

@@ -263,21 +263,44 @@ impl Verdict {
 
 /// The sentence she says when she has run out of ladder. One of a small fixed
 /// set, chosen by what was actually available, and never padded with a guess.
-pub fn out_of_depth(tried: &[Rung], big_brain_available: bool) -> Verdict {
-    let why = if tried.contains(&Rung::BigBrain) {
-        "I asked the big brain and I still do not have an answer for that."
-    } else if !big_brain_available {
-        "That is past what I can work out here. I could ask Claude Code, but it \
-         is not switched on — or not installed."
+/// She has run out of ladder. The message names the exact missing rung and
+/// the command that adds it, because "I can't, and here is the switch" is
+/// useful where "I can't" is merely honest. This wording shipped as the vague
+/// "not switched on — or not installed" and the operator's response was
+/// "huhh" — which is the correct review of a message that diagnoses nothing.
+pub fn out_of_depth(tried: &[Rung], a: Available, big_brain_installed: bool) -> Verdict {
+    // What actually happened…
+    let base = if tried.contains(&Rung::BigBrain) {
+        "I asked Claude and I still do not have an answer for that."
     } else if tried.contains(&Rung::Deliberate) {
         "I have thought about that properly and I do not know."
     } else {
-        "I do not know."
+        "That is past what I can work out here."
     };
-    Verdict::OutOfDepth {
-        tried: tried.to_vec(),
-        why: why.to_string(),
-    }
+    // …and the one thing that would add the next rung, if there is one. A
+    // message that names its own remedy is useful; the old "not switched on —
+    // or not installed" diagnosed nothing and earned a "huhh".
+    let remedy = if tried.contains(&Rung::BigBrain) {
+        None
+    } else if !a.deliberate {
+        Some("My bigger model is not fetched — `nx-wisp models fetch` gets it.")
+    } else if !a.big_brain {
+        if big_brain_installed {
+            Some(
+                "Claude Code is here but the hop is off — \
+                 `nx-wisp config set model.big_brain true` switches it on.",
+            )
+        } else {
+            Some("I do not see Claude Code on this machine to ask.")
+        }
+    } else {
+        None
+    };
+    let why = match remedy {
+        Some(r) => format!("{base} {r}"),
+        None => base.to_string(),
+    };
+    Verdict::OutOfDepth { tried: tried.to_vec(), why }
 }
 
 // ---------------------------------------------------------------------------
@@ -511,8 +534,8 @@ impl Ladder {
     }
 
     /// She has run out of ladder.
-    pub fn give_up(&self, tried: &[Rung]) -> Verdict {
-        out_of_depth(tried, self.big_brain_enabled && self.cli.available())
+    pub fn give_up(&self, tried: &[Rung], available: Available) -> Verdict {
+        out_of_depth(tried, available, self.cli.available())
     }
 }
 
@@ -584,11 +607,34 @@ mod tests {
         assert_eq!(t.rung, Rung::BigBrain);
         assert_eq!(rung, Rung::Deliberate);
 
-        match l.give_up(&[Rung::Reflex, Rung::Deliberate]) {
+        match l.give_up(
+            &[Rung::Reflex, Rung::Deliberate],
+            Available { reflex: true, deliberate: true, big_brain: false },
+        ) {
             Verdict::OutOfDepth { why, .. } => {
-                assert!(why.contains("not switched on"), "{why}");
+                // The message must carry its own remedy: either the switch, or
+                // the honest absence — never the old vague "not switched on —
+                // or not installed" that diagnosed nothing.
+                assert!(
+                    why.contains("config set model.big_brain") || why.contains("do not see Claude"),
+                    "{why}"
+                );
                 // Never a guess dressed as an answer.
                 assert!(!why.contains("probably"));
+            }
+            other => panic!("expected out of depth, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn the_missing_deliberate_model_names_the_fetch_command() {
+        let l = Ladder::default();
+        match l.give_up(
+            &[],
+            Available { reflex: true, deliberate: false, big_brain: false },
+        ) {
+            Verdict::OutOfDepth { why, .. } => {
+                assert!(why.contains("nx-wisp models fetch"), "{why}");
             }
             other => panic!("expected out of depth, got {other:?}"),
         }

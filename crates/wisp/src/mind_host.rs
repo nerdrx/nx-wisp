@@ -122,6 +122,10 @@ impl MindHost {
         });
 
         let mut mind = Mind::builder(backend)
+            .ladder(wisp_mind::escalate::Ladder {
+                big_brain_enabled: cfg.model.big_brain,
+                ..Default::default()
+            })
             .settings(settings)
             .events(events)
             .tool_state_file(dir.join("tools.json"))
@@ -158,6 +162,18 @@ impl MindHost {
 }
 
 fn run(mut mind: Mind, rx: mpsc::Receiver<MindMsg>, speaker: Speaker) {
+    // think() awaits tool invocations, and the nx tool wrappers drive the CLI
+    // through tokio::process — which panics without a reactor. pollster was
+    // not enough: the first ask that touched a tool killed this thread, and
+    // every later question went silently unanswered. A current-thread runtime
+    // is the whole fix; it parks with the thread and costs nothing while idle.
+    let rt = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+        Ok(rt) => rt,
+        Err(e) => {
+            tracing::error!("the mind thread could not build its runtime: {e}");
+            return;
+        }
+    };
     loop {
         // Block for the first message, then drain everything that is waiting.
         // The drain is what makes a downgrade outrank a backlog of chatter: a
@@ -189,7 +205,7 @@ fn run(mut mind: Mind, rx: mpsc::Receiver<MindMsg>, speaker: Speaker) {
                             let ask = Ask::from_operator(text.clone());
                             // One conversation for the palette: the KV cache
                             // keeps its context across exchanges.
-                            match pollster::block_on(mind.think(ask, PALETTE_CONVERSATION, now)) {
+                            match rt.block_on(mind.think(ask, PALETTE_CONVERSATION, now)) {
                                 Ok(t) => tracing::debug!(?t, "thought"),
                                 Err(e) => tracing::warn!("think failed: {e}"),
                             }

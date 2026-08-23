@@ -231,6 +231,10 @@ pub struct ModelSettings {
     /// SPEC §0.2(a): downloads are allowed only from pinned URLs with pinned
     /// hashes, and only when the operator has said yes. Off until they do.
     pub allow_downloads: bool,
+    /// F17's top rung: may she hand a hard question to the Claude Code CLI?
+    /// Ships off; her give-up message names this key when it would help.
+    #[serde(default)]
+    pub big_brain: bool,
     /// F55's manifest of pinned URLs and SHA-256 hashes.
     pub registry: PathBuf,
 }
@@ -246,6 +250,7 @@ impl Default for ModelSettings {
             temperature: 0.7,
             max_tokens: 256,
             allow_downloads: false,
+            big_brain: false,
             registry: data_dir().join("models").join("registry.json"),
         }
     }
@@ -433,6 +438,7 @@ pub const KEYS: &[&str] = &[
     "model.temperature",
     "model.max_tokens",
     "model.allow_downloads",
+    "model.big_brain",
     "model.registry",
     "recorder.max_bytes",
     "recorder.keep",
@@ -496,6 +502,7 @@ impl Config {
             "model.temperature" => format!("{}", self.model.temperature),
             "model.max_tokens" => self.model.max_tokens.to_string(),
             "model.allow_downloads" => self.model.allow_downloads.to_string(),
+            "model.big_brain" => self.model.big_brain.to_string(),
             "model.registry" => self.model.registry.display().to_string(),
             "recorder.max_bytes" => self.recorder.max_bytes.to_string(),
             "recorder.keep" => self.recorder.keep.to_string(),
@@ -577,6 +584,9 @@ impl Config {
             }
             "model.max_tokens" => {
                 self.model.max_tokens = value.parse().map_err(|_| bad("a token count"))?
+            }
+            "model.big_brain" => {
+                self.model.big_brain = parse_bool(value).ok_or_else(|| bad("true or false"))?
             }
             "model.allow_downloads" => {
                 self.model.allow_downloads = parse_bool(value).ok_or_else(|| bad("true or false"))?
