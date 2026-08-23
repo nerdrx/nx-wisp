@@ -3537,7 +3537,7 @@ dependencies = [
 
 [[package]]
 name = "wisp"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "libc",
@@ -3563,7 +3563,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-attn"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -3572,7 +3572,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-editor"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "png",
  "serde",
@@ -3588,7 +3588,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-fleet"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "base64 0.22.1",
  "serde",
@@ -3603,7 +3603,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-gov"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "libc",
  "serde",
@@ -3614,7 +3614,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-mind"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "llama-cpp-2",
  "rusqlite",
@@ -3633,7 +3633,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-paint"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "bytemuck",
  "cosmic-text",
@@ -3648,14 +3648,14 @@ dependencies = [
 
 [[package]]
 name = "wisp-proto"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "wisp-rig"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "serde",
  "tempfile",
@@ -3666,7 +3666,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-senses"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "futures-util",
@@ -3688,7 +3688,7 @@ dependencies = [
 
 [[package]]
 name = "wisp-shell"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "png",
  "pollster",
@@ -3706,11 +3706,11 @@ dependencies = [
 
 [[package]]
 name = "wisp-theme"
-version = "0.5.0"
+version = "0.6.0"
 
 [[package]]
 name = "wisp-voice"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "espeak-rs",
  "piper-rs",
