@@ -402,20 +402,48 @@ mod ureq_http {
     /// `ureq`, configured to say as little about this machine as possible.
     pub struct UreqHttp {
         agent: ureq::Agent,
+        /// Same request, IPv4 only — see `call`.
+        v4: ureq::Agent,
+        /// Sticky: once IPv6 has proven dead, an 18 GiB download must not pay
+        /// a failed connect per resumed chunk.
+        v6_is_dead: std::sync::atomic::AtomicBool,
     }
 
     impl Default for UreqHttp {
         fn default() -> Self {
-            let config = ureq::Agent::config_builder()
-                .timeout_connect(Some(std::time::Duration::from_secs(20)))
-                // No global timeout: an 18 GiB download over a slow link is not
-                // a hung request. Progress stalling is the caller's problem.
-                .user_agent(concat!("nx-wisp/", env!("CARGO_PKG_VERSION")))
-                .build();
+            let base = || {
+                ureq::Agent::config_builder()
+                    .timeout_connect(Some(std::time::Duration::from_secs(20)))
+                    // No global timeout: an 18 GiB download over a slow link is
+                    // not a hung request. Progress stalling is the caller's
+                    // problem.
+                    .user_agent(concat!("nx-wisp/", env!("CARGO_PKG_VERSION")))
+            };
             UreqHttp {
-                agent: config.into(),
+                agent: base().build().into(),
+                v4: base()
+                    .ip_family(ureq::config::IpFamily::Ipv4Only)
+                    .build()
+                    .into(),
+                v6_is_dead: std::sync::atomic::AtomicBool::new(false),
             }
         }
+    }
+
+    /// `ENETUNREACH` / `EHOSTUNREACH`, as `ureq` reports them. This machine has
+    /// an IPv6 default route learned from a router advertisement and no working
+    /// IPv6 path; `ureq` has no happy-eyeballs, so every fetch died with
+    /// "Network is unreachable (os error 101)" while `curl` worked. wisp-voice's
+    /// fetcher learned this first (its models downloaded fine); this one shipped
+    /// without the lesson and the operator hit it within the hour — the voice
+    /// rows said "already here, hash verified" while every model row said
+    /// "Network is unreachable", which is this exact asymmetry.
+    fn unreachable(why: &str) -> bool {
+        let w = why.to_ascii_lowercase();
+        w.contains("network is unreachable")
+            || w.contains("no route to host")
+            || w.contains("host is unreachable")
+            || w.contains("address family not supported")
     }
 
     impl Http for UreqHttp {
@@ -426,11 +454,31 @@ mod ureq_http {
             if !url.starts_with("https://") {
                 return Err(format!("refusing to fetch over plain HTTP: {url}"));
             }
-            let mut req = self.agent.get(url);
-            if from > 0 {
-                req = req.header("Range", &format!("bytes={from}-"));
-            }
-            let resp = req.call().map_err(|e| e.to_string())?;
+            use std::sync::atomic::Ordering;
+            let send = |agent: &ureq::Agent| {
+                let mut req = agent.get(url);
+                if from > 0 {
+                    req = req.header("Range", &format!("bytes={from}-"));
+                }
+                req.call()
+            };
+            let resp = if self.v6_is_dead.load(Ordering::Relaxed) {
+                send(&self.v4).map_err(|e| e.to_string())?
+            } else {
+                match send(&self.agent) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        let why = e.to_string();
+                        if !unreachable(&why) {
+                            return Err(why);
+                        }
+                        tracing::info!(url, %why, "no route on the preferred family; retrying over IPv4");
+                        self.v6_is_dead.store(true, Ordering::Relaxed);
+                        send(&self.v4)
+                            .map_err(|e2| format!("{why}; and over IPv4: {e2}"))?
+                    }
+                }
+            };
             let status = resp.status().as_u16();
             let resumed = status == 206;
             if from > 0 && !resumed {
