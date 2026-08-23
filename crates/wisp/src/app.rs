@@ -134,6 +134,9 @@ pub struct Options {
     pub run_for: Option<Duration>,
     /// The compositor half. `None` is [`Headless`] — no window, no surface.
     pub shell: Option<Box<dyn Shell>>,
+    /// Speak one line into the bus a few seconds after startup, as if typed.
+    /// The `NX_WISP_INJECT_SAY` env var, parsed by the binary only.
+    pub inject_say: Option<String>,
     /// Behaviour-tree seed. Fixed in tests so a run is reproducible.
     pub seed: u64,
 }
@@ -146,6 +149,7 @@ impl Options {
             fleet: None,
             run_for: None,
             shell: None,
+            inject_say: None,
             seed: crate::epoch_ms(),
         }
     }
@@ -347,8 +351,12 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
 
     // Test lever for the headless harness: a real palette needs a real click,
     // which a nested compositor has nobody to make. One line, three seconds
-    // in, exactly as if it had been typed.
-    if let Ok(line) = std::env::var("NX_WISP_INJECT_SAY") {
+    // in, exactly as if it had been typed. Populated from the environment at
+    // the BINARY edge (cli.rs), never here — reading env inside the library
+    // meant a stray export in a developer's shell injected ghost speech into
+    // the test suite's mock runs, which cost a round of chasing a flake that
+    // was actually shell hygiene.
+    if let Some(line) = opts.inject_say.clone() {
         if !line.trim().is_empty() {
             let tx = inner_tx.clone();
             let ck = clock.clone();

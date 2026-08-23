@@ -589,6 +589,7 @@ pub fn dispatch(inv: Invocation) -> Result<i32, CliError> {
 fn run(dir: &std::path::Path, global: &Global, args: RunArgs) -> Result<i32, CliError> {
     let mut opts = crate::app::Options::new(dir.to_path_buf());
     opts.mock = global.mock;
+    opts.inject_say = std::env::var("NX_WISP_INJECT_SAY").ok();
     opts.fleet = args.fleet;
     opts.run_for = args.run_for;
 
