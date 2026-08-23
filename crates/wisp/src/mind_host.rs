@@ -19,6 +19,7 @@
 use std::sync::mpsc;
 use std::thread::JoinHandle;
 
+use wisp_mind::escalate::Ask;
 use wisp_mind::Mind;
 use wisp_proto::{
     sense::Observation, Event, EventKind, Governed, Millis, Tier, TierReason,
@@ -28,6 +29,10 @@ use wisp_senses::Clock;
 
 use crate::app::Speaker;
 use crate::recorder::Recorder;
+
+/// The palette's conversation slot in the KV cache — one context, kept warm
+/// across exchanges.
+const PALETTE_CONVERSATION: wisp_mind::kv::ConversationId = 1;
 
 /// What the app sends the mind thread.
 pub enum MindMsg {
@@ -170,6 +175,26 @@ fn run(mut mind: Mind, rx: mpsc::Receiver<MindMsg>, speaker: Speaker) {
                 MindMsg::Obs(obs, now) => {
                     last_now = last_now.max(now);
                     mind.observe(&obs, now);
+                    // The operator spoke. This is THE conversation entry
+                    // point — without it every typed line was filed away as
+                    // a memory and never answered, which shipped in 0.6.0 and
+                    // was noticed within the hour ("i type something and
+                    // nothing happens"). think() runs the whole ladder:
+                    // triage, self-assessment, escalation, and an honest
+                    // "I can't right now" when no model is fetched — the
+                    // answer (either way) lands in the outbox as an Answer,
+                    // which the budget always lets through.
+                    if let Observation::Speech { text, final_: true } = &obs {
+                        if !text.trim().is_empty() {
+                            let ask = Ask::from_operator(text.clone());
+                            // One conversation for the palette: the KV cache
+                            // keeps its context across exchanges.
+                            match pollster::block_on(mind.think(ask, PALETTE_CONVERSATION, now)) {
+                                Ok(t) => tracing::debug!(?t, "thought"),
+                                Err(e) => tracing::warn!("think failed: {e}"),
+                            }
+                        }
+                    }
                 }
                 MindMsg::Tier { tier, reason, devices, vram, now } => {
                     last_now = last_now.max(now);

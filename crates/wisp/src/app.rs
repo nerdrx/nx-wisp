@@ -345,6 +345,23 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
     #[cfg(not(feature = "voice-piper"))]
     let voice_tx: VoiceTx = None;
 
+    // Test lever for the headless harness: a real palette needs a real click,
+    // which a nested compositor has nobody to make. One line, three seconds
+    // in, exactly as if it had been typed.
+    if let Ok(line) = std::env::var("NX_WISP_INJECT_SAY") {
+        if !line.trim().is_empty() {
+            let tx = inner_tx.clone();
+            let ck = clock.clone();
+            tokio::spawn(async move {
+                tokio::time::sleep(Duration::from_secs(3)).await;
+                let _ = tx.send(Event {
+                    at: ck.now(),
+                    kind: EventKind::Sensed(Observation::Speech { text: line, final_: true }),
+                });
+            });
+        }
+    }
+
     if let Some(pinned) = cfg.tier.pinned {
         let _ = gov_tx.send(GovCmd::Pin(pinned));
     }
@@ -1026,14 +1043,22 @@ async fn heartbeat(
         // every sense — recorded before dispatch — and the whole pipeline
         // (mind hears the operator, budget passes the Answer, bubble and voice
         // deliver it) runs with no special path for typed words.
-        for line in sh.take_input() {
+        let typed = sh.take_input();
+        for line in &typed {
             let _ = input_tx.send(Event {
                 at: clock.now(),
-                kind: EventKind::Sensed(Observation::Speech { text: line, final_: true }),
+                kind: EventKind::Sensed(Observation::Speech { text: line.clone(), final_: true }),
             });
         }
 
         let mut r = rig.0.lock().unwrap_or_else(|e| e.into_inner());
+        if !typed.is_empty() {
+            // She reacts the same frame the line is submitted — thinking can
+            // take seconds, and a companion that goes blank while it computes
+            // reads as broken. The answer replaces the expression when it lands.
+            r.set_expression("curious");
+            sh.set_expression("curious");
+        }
         let anchor = sh.anchor().unwrap_or((0.0, 0.0));
         let input = RigInput {
             size_px,

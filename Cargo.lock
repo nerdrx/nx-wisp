@@ -3541,6 +3541,7 @@ version = "0.6.0"
 dependencies = [
  "anyhow",
  "libc",
+ "pollster",
  "serde",
  "serde_json",
  "tempfile",
@@ -3651,6 +3652,7 @@ name = "wisp-proto"
 version = "0.6.0"
 dependencies = [
  "serde",
+ "serde_json",
 ]
 
 [[package]]
