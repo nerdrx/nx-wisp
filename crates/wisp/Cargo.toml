@@ -56,7 +56,13 @@ default = []
 # the default build uses the deterministic mock and needs neither GPU nor
 # headers, which is what CI runs.
 mind-llama = ["wisp-mind/vulkan"]
-# Piper TTS + whisper STT for a real voice. Needs the ort cache (see env.sh).
-voice-piper = ["wisp-voice/piper-tts", "wisp-voice/whisper-stt", "wisp-voice/net", "wisp-voice/consent"]
+# Piper TTS for a real voice. Needs the ort cache (see env.sh).
+#
+# whisper-stt is deliberately NOT here: llama.cpp and whisper.cpp each bundle
+# their own ggml, and linking both statically into one binary is a wall of
+# duplicate-symbol errors. Nothing is lost today — there is no microphone
+# capture backend yet, so shipped STT would be dead weight. When the mic
+# lands, whisper needs to build against llama's ggml rather than its own.
+voice-piper = ["wisp-voice/piper-tts", "wisp-voice/net", "wisp-voice/consent"]
 # What the release AppImage ships.
 full = ["mind-llama", "voice-piper"]
