@@ -403,6 +403,7 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
             clock.clone(),
             tier_rx.clone(),
             voice_tx.clone(),
+            inner_tx.clone(),
             counters.clone(),
             cfg.appearance.size_px,
             shutdown.clone(),
@@ -979,6 +980,7 @@ async fn heartbeat(
     clock: Clock,
     tier_rx: watch::Receiver<Tier>,
     voice_tx: VoiceTx,
+    input_tx: broadcast::Sender<Event>,
     counters: Arc<Counters>,
     size_px: f32,
     mut shutdown: Shutdown,
@@ -1019,6 +1021,18 @@ async fn heartbeat(
         last = now;
 
         let mut sh = shell.lock().unwrap_or_else(|e| e.into_inner());
+
+        // Palette lines are speech. They enter through the INNER channel like
+        // every sense — recorded before dispatch — and the whole pipeline
+        // (mind hears the operator, budget passes the Answer, bubble and voice
+        // deliver it) runs with no special path for typed words.
+        for line in sh.take_input() {
+            let _ = input_tx.send(Event {
+                at: clock.now(),
+                kind: EventKind::Sensed(Observation::Speech { text: line, final_: true }),
+            });
+        }
+
         let mut r = rig.0.lock().unwrap_or_else(|e| e.into_inner());
         let anchor = sh.anchor().unwrap_or((0.0, 0.0));
         let input = RigInput {

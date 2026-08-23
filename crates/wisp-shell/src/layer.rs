@@ -12,6 +12,7 @@ use smithay_client_toolkit::{
     registry::{ProvidesRegistryState, RegistryState},
     registry_handlers,
     seat::{
+        keyboard::{KeyEvent, KeyboardHandler, Keysym, Modifiers, RawModifiers},
         pointer::{PointerEvent, PointerEventKind, PointerHandler},
         Capability, SeatHandler, SeatState,
     },
@@ -25,7 +26,7 @@ use smithay_client_toolkit::{
 };
 use wayland_client::{
     globals::registry_queue_init,
-    protocol::{wl_output, wl_pointer, wl_region, wl_seat, wl_surface},
+    protocol::{wl_keyboard, wl_output, wl_pointer, wl_region, wl_seat, wl_surface},
     Connection, Dispatch, EventQueue, Proxy, QueueHandle,
 };
 use wisp_paint::{Painter, Scene, TextEngine};
@@ -53,7 +54,7 @@ impl Default for ShellConfig {
 }
 
 /// What the surface did this dispatch, handed back to the host loop.
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone)]
 pub struct Tick {
     pub configured: bool,
     pub drew: bool,
@@ -62,6 +63,12 @@ pub struct Tick {
     pub grabbed: bool,
     pub released: bool,
     pub closed: bool,
+    /// Keys pressed this pump while the surface held keyboard focus — the
+    /// keysym, the text xkb produced for it, and whether ctrl was down.
+    pub keys: Vec<(Keysym, Option<String>, bool)>,
+    /// The compositor granted or took the keyboard.
+    pub keyboard_entered: bool,
+    pub keyboard_left: bool,
 }
 
 pub struct WispShell {
@@ -86,6 +93,8 @@ struct State {
     seat_state: SeatState,
     compositor: CompositorState,
     pointer: Option<wl_pointer::WlPointer>,
+    keyboard: Option<wl_keyboard::WlKeyboard>,
+    modifiers: Modifiers,
 
     // DROP ORDER IS LOad-BEARING. Rust drops fields in declaration order, and
     // the wgpu surface holds a raw pointer to the wl_surface that `layer` owns.
@@ -222,6 +231,8 @@ impl WispShell {
             seat_state: SeatState::new(&globals, &qh),
             compositor,
             pointer: None,
+            keyboard: None,
+            modifiers: Modifiers::default(),
             surface,
             painter,
             text: TextEngine::new(),
@@ -257,7 +268,7 @@ impl WispShell {
         let _ = self.queue.dispatch_pending(&mut self.state);
         let _ = self.conn.flush();
         self.state.tick.closed = self.state.exit;
-        self.state.tick
+        self.state.tick.clone()
     }
 
     /// Block until the compositor has something to say. Used when she is
@@ -267,7 +278,7 @@ impl WispShell {
         self.state.tick = Tick::default();
         let _ = self.queue.blocking_dispatch(&mut self.state);
         self.state.tick.closed = self.state.exit;
-        self.state.tick
+        self.state.tick.clone()
     }
 
     pub fn is_configured(&self) -> bool {
@@ -362,6 +373,20 @@ impl WispShell {
     /// the GPU rather than being built and dropped.
     pub fn last_draw_calls(&self) -> usize {
         self.state.painter.last_draw_calls()
+    }
+
+    /// Ask for (or give back) the keyboard. On-demand focus is how a layer
+    /// surface types: the compositor grants it on the next click, and F9's
+    /// promise — she never steals the keyboard uninvited — is kept because
+    /// this is only ever called when the operator clicked her.
+    pub fn set_keyboard_interactive(&mut self, want: bool) {
+        self.state.layer.set_keyboard_interactivity(if want {
+            KeyboardInteractivity::OnDemand
+        } else {
+            KeyboardInteractivity::None
+        });
+        self.state.layer.commit();
+        let _ = self.conn.flush();
     }
 
     pub fn set_tier(&mut self, tier: Tier) {
@@ -660,15 +685,32 @@ impl SeatHandler for State {
     fn seat_state(&mut self) -> &mut SeatState { &mut self.seat_state }
     fn new_seat(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_seat::WlSeat) {}
     fn new_capability(&mut self, _: &Connection, qh: &QueueHandle<Self>, seat: wl_seat::WlSeat, cap: Capability) {
-        if cap == Capability::Pointer && self.pointer.is_none() {
-            self.pointer = self.seat_state.get_pointer(qh, &seat).ok();
+        match cap {
+            Capability::Pointer if self.pointer.is_none() => {
+                self.pointer = self.seat_state.get_pointer(qh, &seat).ok();
+            }
+            Capability::Keyboard if self.keyboard.is_none() => {
+                // Bound eagerly, but it only ever delivers while the palette
+                // has asked for on-demand interactivity and the compositor has
+                // granted focus — the rest of the time she is `None` there.
+                self.keyboard = self.seat_state.get_keyboard(qh, &seat, None).ok();
+            }
+            _ => {}
         }
     }
     fn remove_capability(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_seat::WlSeat, cap: Capability) {
-        if cap == Capability::Pointer {
-            if let Some(p) = self.pointer.take() {
-                p.release();
+        match cap {
+            Capability::Pointer => {
+                if let Some(p) = self.pointer.take() {
+                    p.release();
+                }
             }
+            Capability::Keyboard => {
+                if let Some(k) = self.keyboard.take() {
+                    k.release();
+                }
+            }
+            _ => {}
         }
     }
     fn remove_seat(&mut self, _: &Connection, _: &QueueHandle<Self>, _: wl_seat::WlSeat) {}
@@ -694,6 +736,26 @@ impl PointerHandler for State {
                 _ => {}
             }
         }
+    }
+}
+
+impl KeyboardHandler for State {
+    fn enter(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_keyboard::WlKeyboard, _: &wl_surface::WlSurface, _: u32, _: &[u32], _: &[Keysym]) {
+        self.tick.keyboard_entered = true;
+    }
+    fn leave(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_keyboard::WlKeyboard, _: &wl_surface::WlSurface, _: u32) {
+        self.tick.keyboard_left = true;
+    }
+    fn press_key(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_keyboard::WlKeyboard, _: u32, ev: KeyEvent) {
+        self.tick.keys.push((ev.keysym, ev.utf8.clone(), self.modifiers.ctrl));
+    }
+    fn release_key(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_keyboard::WlKeyboard, _: u32, _: KeyEvent) {}
+    /// Repeats type too — holding backspace must keep deleting.
+    fn repeat_key(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_keyboard::WlKeyboard, _: u32, ev: KeyEvent) {
+        self.tick.keys.push((ev.keysym, ev.utf8.clone(), self.modifiers.ctrl));
+    }
+    fn update_modifiers(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &wl_keyboard::WlKeyboard, _: u32, m: Modifiers, _: RawModifiers, _: u32) {
+        self.modifiers = m;
     }
 }
 

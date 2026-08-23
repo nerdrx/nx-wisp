@@ -16,7 +16,7 @@ use wisp_rig::{
     physics::{step, BodyState, Forces, PhysicsParams, Surface},
     ContourOptions, Polygon, Rect, RigFrame, Vec2,
 };
-use wisp_shell::{bubble, tell, ShellConfig, WispShell};
+use wisp_shell::{bubble, palette, tell, Keysym, ShellConfig, WispShell};
 
 use crate::shell::{FrameCtx, Shell};
 
@@ -48,6 +48,15 @@ pub struct LayerShellHost {
     showing: Option<(bubble::Layout, Instant)>,
     /// Invasive senses that are live right now (SPEC §0.3's visible tell).
     tells: Vec<(wisp_proto::sense::SenseId, bool)>,
+    /// F41. Opened by a click on her — a click, not a drag.
+    palette: palette::Palette,
+    /// Where the pointer went down, to tell a click from the start of a throw.
+    press_at: Option<Vec2>,
+    /// Lines the operator submitted, drained by the app each frame.
+    typed: Vec<String>,
+    /// Process-start epoch for animation phases; a per-frame Instant would
+    /// make every phase permanently zero.
+    started: Instant,
     /// Output-space position the NEXT frame was built for.
     pending: Vec2,
     /// That same position expressed within the surface — what `anchor` returns.
@@ -95,6 +104,10 @@ impl LayerShellHost {
             pending_say: None,
             showing: None,
             tells: Vec::new(),
+            palette: palette::Palette::default(),
+            press_at: None,
+            typed: Vec::new(),
+            started: Instant::now(),
             pending: start,
             local,
             shell,
@@ -178,9 +191,43 @@ impl LayerShellHost {
         }
         if tick.grabbed {
             self.grab = self.cursor;
+            self.press_at = self.cursor;
         }
         if tick.released {
+            // A press and release that never travelled is a click: summon her.
+            // Anything that moved was a drag, and stays a throw.
+            if let (Some(a), Some(b)) = (self.press_at.take(), self.cursor) {
+                let dist = (a.x - b.x).abs() + (a.y - b.y).abs();
+                if dist < 6.0 && !self.palette.is_open() {
+                    self.palette.open();
+                    self.shell.set_keyboard_interactive(true);
+                }
+            }
             self.grab = None;
+        }
+
+        // Keys only arrive while the compositor has granted us the keyboard,
+        // which only happens while the palette asked for it.
+        for (sym, utf8, ctrl) in &tick.keys {
+            if let Some(k) = decode_key(*sym, utf8.as_deref(), *ctrl) {
+                match self.palette.key(k) {
+                    palette::Outcome::Submitted(line) => {
+                        self.typed.push(line);
+                        self.shell.set_keyboard_interactive(false);
+                    }
+                    palette::Outcome::Dismissed => {
+                        self.shell.set_keyboard_interactive(false);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        // The compositor taking the keyboard back (the operator clicked
+        // elsewhere) dismisses an open palette rather than leaving a bar that
+        // cannot type.
+        if tick.keyboard_left && self.palette.is_open() {
+            self.palette.close();
+            self.shell.set_keyboard_interactive(false);
         }
         self.rebuild_terrain();
         let forces = Forces {
@@ -220,7 +267,9 @@ impl Shell for LayerShellHost {
         let tells = &self.tells;
         // Pulse the tell off wall-clock so it is visibly alive; the shell owns
         // no clock, so the phase is handed in.
-        let phase = (now.elapsed().as_secs_f32() * 0.0).fract();
+        let phase = (self.started.elapsed().as_secs_f32() * 0.8).fract();
+        let caret_phase = (self.started.elapsed().as_secs_f32() * 1.2).fract();
+        let pal = &self.palette;
         let elapsed_ms = showing.as_ref().map(|(_, t)| t.elapsed().as_millis() as u64);
 
         self.shell.draw_with(frame, input_region, |painter, engine, scene| {
@@ -240,6 +289,7 @@ impl Shell for LayerShellHost {
             for (sense, active) in tells {
                 tell::build(*sense, *active, at, size, phase, scene);
             }
+            pal.paint(at, size, bounds, caret_phase, painter, engine, scene);
         });
 
         // Retire a finished bubble so it does not sit there forever.
@@ -313,7 +363,34 @@ impl Shell for LayerShellHost {
         }
     }
 
+    fn take_input(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.typed)
+    }
+
     fn shutdown(&mut self) {
         self.closed = true;
     }
+}
+
+/// Compositor keys → palette keys. The palette knows nothing about keysyms,
+/// and everything it does not recognise falls through untouched.
+fn decode_key(sym: Keysym, utf8: Option<&str>, ctrl: bool) -> Option<palette::Key> {
+    Some(match sym {
+        Keysym::Return | Keysym::KP_Enter => palette::Key::Submit,
+        Keysym::Escape => palette::Key::Dismiss,
+        Keysym::BackSpace if ctrl => palette::Key::DeleteWord,
+        Keysym::BackSpace => palette::Key::Backspace,
+        Keysym::w | Keysym::W if ctrl => palette::Key::DeleteWord,
+        Keysym::Left => palette::Key::Left,
+        Keysym::Right => palette::Key::Right,
+        Keysym::Home => palette::Key::Home,
+        Keysym::End => palette::Key::End,
+        _ => {
+            let t = utf8?;
+            if t.is_empty() || ctrl {
+                return None;
+            }
+            palette::Key::Char(t.to_string())
+        }
+    })
 }

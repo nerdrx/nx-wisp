@@ -10,6 +10,7 @@
 pub mod bridge;
 pub mod bubble;
 pub mod layer;
+pub mod palette;
 pub mod window;
 pub mod tell;
 

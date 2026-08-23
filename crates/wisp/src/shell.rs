@@ -82,6 +82,16 @@ pub trait Shell: Send {
     /// She poked a window (F40's focus warden, and her antics).
     fn poke(&mut self, _window: Option<u64>) {}
 
+    /// Operator input the shell collected since the last call — today, lines
+    /// typed into the summon palette. The app publishes each as
+    /// `Observation::Speech { final_: true }`: typed words ARE speech, and the
+    /// entire pipeline (mind → budget → bubble → voice) answers them with no
+    /// separate path. Facts flow *into* the bus; the shell still cannot say
+    /// anything on its own.
+    fn take_input(&mut self) -> Vec<String> {
+        Vec::new()
+    }
+
     /// Something was sensed.
     ///
     /// The shell needs this for one thing above all: `Observation::Window`
