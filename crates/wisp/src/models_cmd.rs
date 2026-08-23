@@ -30,6 +30,24 @@ pub fn status(dir: &std::path::Path) -> String {
             ));
         }
     }
+    #[cfg(feature = "voice-piper")]
+    {
+        use wisp_voice::{voices::VoiceRegistry, ModelStore};
+        let store = ModelStore::open();
+        if let Some(pack) = VoiceRegistry::builtin().get("wisp") {
+            for id in pack.required_models() {
+                let e = store.entry(id);
+                s.push_str(&format!(
+                    "  {:<11} {:<34} {:>6} MiB   {}\n",
+                    "voice",
+                    id,
+                    e.map(|e| e.mib() as u64).unwrap_or(0),
+                    if store.have(id) { "here" } else { "not fetched" },
+                ));
+            }
+        }
+    }
+
     let missing = reg.first_run_bytes() / (1024 * 1024);
     s.push_str(&format!(
         "\nA first `models fetch` moves about {missing} MiB, once, from pinned\n\
@@ -78,6 +96,7 @@ pub fn fetch(dir: &std::path::Path, names: &[String]) -> i32 {
         }
     };
 
+    #[allow(unused_mut)]
     let mut failed = false;
     for (name, r) in fetcher.ensure_all(&wanted, &cfg.model.models_dir, &mut progress) {
         println!();
@@ -95,5 +114,36 @@ pub fn fetch(dir: &std::path::Path, names: &[String]) -> i32 {
             }
         }
     }
+    // The voice is fetched alongside the mind's models: one command, one
+    // consent, everything she needs to think AND speak.
+    #[cfg(feature = "voice-piper")]
+    if names.is_empty() {
+        use wisp_voice::{voices::VoiceRegistry, ModelStore};
+        let store = ModelStore::open();
+        if let Some(pack) = VoiceRegistry::builtin().get("wisp") {
+            for id in pack.required_models() {
+                if store.have(id) {
+                    println!("  {id}: already here, hash verified");
+                    continue;
+                }
+                let mut last = 0u64;
+                match store.ensure_online(id, &mut |p: wisp_voice::models::Progress| {
+                    if p.done.saturating_sub(last) > 8 << 20 {
+                        last = p.done;
+                        print!("\r  {} {:>4} MiB", p.id, p.done >> 20);
+                        use std::io::Write;
+                        let _ = std::io::stdout().flush();
+                    }
+                }) {
+                    Ok(_) => println!("\r  {id}: fetched, hash verified        "),
+                    Err(e) => {
+                        println!("\r  {id}: {e}");
+                        failed = true;
+                    }
+                }
+            }
+        }
+    }
+
     if failed { 1 } else { 0 }
 }

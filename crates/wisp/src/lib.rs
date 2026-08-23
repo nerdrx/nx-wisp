@@ -62,6 +62,8 @@ pub mod shell;
 pub mod editor_host;
 pub mod mind_host;
 pub mod models_cmd;
+#[cfg(feature = "voice-piper")]
+pub mod voice_host;
 pub mod shell_layer;
 pub mod state;
 

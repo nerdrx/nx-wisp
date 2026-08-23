@@ -65,6 +65,9 @@ pub enum Command {
     Edit(Option<std::path::PathBuf>),
     /// F55: list the pinned models, or fetch them by explicit request.
     Models(Vec<String>),
+    /// Speak a line aloud, out of the operator's own mouth as it were — a
+    /// demo and a debug tool for the voice stack, not a channel into her.
+    Say(String),
     Install(InstallArgs),
     Uninstall(InstallArgs),
     Version,
@@ -339,6 +342,19 @@ fn parse_command<I: Iterator<Item = String>>(
             expect_end(it, "doctor", g)?;
             Ok(Command::Doctor)
         }
+        "say" => {
+            let mut words = Vec::new();
+            while let Some(arg) = it.next() {
+                if try_global(&arg, it, g)? {
+                    continue;
+                }
+                words.push(arg);
+            }
+            if words.is_empty() {
+                return Err(CliError::new("say what? `nx-wisp say hello` works.".to_string()));
+            }
+            Ok(Command::Say(words.join(" ")))
+        }
         "models" => {
             let mut rest = Vec::new();
             while let Some(arg) = it.next() {
@@ -515,6 +531,41 @@ pub fn dispatch(inv: Invocation) -> Result<i32, CliError> {
         Command::Tier(cmd) => tier(&dir, cmd),
         Command::Config(cmd) => config_cmd(&dir, cmd),
         Command::Edit(path) => Ok(crate::editor_host::run(path.as_deref())),
+        Command::Say(text) => {
+            #[cfg(feature = "voice-piper")]
+            {
+                match crate::voice_host::VoiceHost::spawn(&dir) {
+                    Ok(host) => {
+                        let tx = host.sender();
+                        tx.send(crate::voice_host::VoiceMsg::Say {
+                            text: text.clone(),
+                            expression: None,
+                        });
+                        // Give her time to finish the sentence; shutdown joins
+                        // the thread, and dropping the Voice un-ducks.
+                        std::thread::sleep(std::time::Duration::from_millis(
+                            2_000 + 80 * text.len() as u64,
+                        ));
+                        host.shutdown();
+                        Ok(0)
+                    }
+                    Err(why) => Err(CliError::with_code(
+                        format!("She has no voice right now — {why}"),
+                        1,
+                    )),
+                }
+            }
+            #[cfg(not(feature = "voice-piper"))]
+            {
+                let _ = text;
+                Err(CliError::with_code(
+                    "This build has no synthesiser — it was built without the \
+                     voice-piper feature. The release AppImage has one."
+                        .to_string(),
+                    1,
+                ))
+            }
+        }
         Command::Models(args) => match args.first().map(String::as_str) {
             None | Some("status") => {
                 print!("{}", crate::models_cmd::status(&dir));

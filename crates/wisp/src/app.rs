@@ -225,6 +225,11 @@ enum GovCmd {
 ///
 /// Holds the single-instance lock for the whole run. A second copy in the same
 /// config dir fails here rather than half-starting.
+#[cfg(feature = "voice-piper")]
+type VoiceTx = Option<crate::voice_host::VoiceSender>;
+#[cfg(not(feature = "voice-piper"))]
+type VoiceTx = Option<std::convert::Infallible>;
+
 pub async fn run(opts: Options) -> anyhow::Result<Summary> {
     let dir = opts.config_dir.clone();
     std::fs::create_dir_all(&dir)?;
@@ -317,6 +322,29 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
     };
     let mind_tx = mind.as_ref().map(|m| m.sender());
 
+    // --- the loudspeaker ----------------------------------------------------
+    // Feature-gated: without `voice-piper` there is no synthesiser to mount.
+    // A failure to build the stack is a legitimate state (no PipeWire, no
+    // fetched voice) — she stays on bubbles and the log says why.
+    #[cfg(feature = "voice-piper")]
+    let voice = {
+        if opts.mock {
+            None
+        } else {
+            match crate::voice_host::VoiceHost::spawn(&dir) {
+                Ok(v) => Some(v),
+                Err(why) => {
+                    tracing::info!("no voice this run: {why}");
+                    None
+                }
+            }
+        }
+    };
+    #[cfg(feature = "voice-piper")]
+    let voice_tx: VoiceTx = voice.as_ref().map(|v| v.sender());
+    #[cfg(not(feature = "voice-piper"))]
+    let voice_tx: VoiceTx = None;
+
     if let Some(pinned) = cfg.tier.pinned {
         let _ = gov_tx.send(GovCmd::Pin(pinned));
     }
@@ -366,6 +394,7 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
             counters.clone(),
             clock.clone(),
             tier_rx.clone(),
+            voice_tx.clone(),
             shutdown.clone(),
         )),
         tokio::spawn(heartbeat(
@@ -373,6 +402,7 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
             shell.clone(),
             clock.clone(),
             tier_rx.clone(),
+            voice_tx.clone(),
             counters.clone(),
             cfg.appearance.size_px,
             shutdown.clone(),
@@ -417,6 +447,10 @@ pub async fn run(opts: Options) -> anyhow::Result<Summary> {
     }
     if let Some(m) = mind {
         m.shutdown();
+    }
+    #[cfg(feature = "voice-piper")]
+    if let Some(v) = voice {
+        v.shutdown();
     }
     // The guard is taken and dropped in its own scope. A `std::sync::MutexGuard`
     // held across an `.await` would make this future `!Send` — and, worse, would
@@ -770,6 +804,7 @@ async fn pump(
     counters: Arc<Counters>,
     clock: Clock,
     tier_rx: watch::Receiver<Tier>,
+    voice_tx: VoiceTx,
     mut shutdown: Shutdown,
 ) {
     let mut rx = bus.subscribe();
@@ -804,7 +839,7 @@ async fn pump(
             let mut a = attention.0.lock().unwrap_or_else(|e| e.into_inner());
             a.tick(now)
         };
-        apply_turn(&turn, &rig, &shell);
+        apply_turn(&turn, &rig, &shell, &voice_tx);
 
         // Everything the budget decided, as facts about the past. This is the
         // only source of Proposed / Said / Dropped, which is what makes
@@ -850,11 +885,26 @@ fn on_bus_event(
     }
 }
 
-fn apply_turn(turn: &Turn, rig: &Shared<Rig>, shell: &Arc<Mutex<Box<dyn Shell>>>) {
+fn apply_turn(
+    turn: &Turn,
+    rig: &Shared<Rig>,
+    shell: &Arc<Mutex<Box<dyn Shell>>>,
+    voice: &VoiceTx,
+) {
     let mut sh = shell.lock().unwrap_or_else(|e| e.into_inner());
     for u in &turn.said {
-        // The only thing in the whole process that reaches the operator.
+        // The only things in the whole process that reach the operator: the
+        // bubble, and — with a voice mounted — the same words aloud. Both are
+        // fed from here, AFTER the budget said yes, so the loudspeaker can
+        // never say something the bubble would not show.
         sh.say(u);
+        #[cfg(feature = "voice-piper")]
+        if let Some(v) = voice {
+            v.send(crate::voice_host::VoiceMsg::Say {
+                text: u.text.clone(),
+                expression: u.expression.clone(),
+            });
+        }
         if let Some(expr) = &u.expression {
             rig.0.lock().unwrap_or_else(|e| e.into_inner()).set_expression(expr);
             sh.set_expression(expr);
@@ -928,13 +978,27 @@ async fn heartbeat(
     shell: Arc<Mutex<Box<dyn Shell>>>,
     clock: Clock,
     tier_rx: watch::Receiver<Tier>,
+    voice_tx: VoiceTx,
     counters: Arc<Counters>,
     size_px: f32,
     mut shutdown: Shutdown,
 ) {
     let mut last = clock.now();
+    let mut last_tier: Option<Tier> = None;
     loop {
         let tier = *tier_rx.borrow();
+        #[cfg(feature = "voice-piper")]
+        if last_tier != Some(tier) {
+            last_tier = Some(tier);
+            if let Some(v) = &voice_tx {
+                v.send(crate::voice_host::VoiceMsg::Tier(tier));
+            }
+        }
+        #[cfg(not(feature = "voice-piper"))]
+        {
+            last_tier = Some(tier);
+            let _ = (&last_tier, &voice_tx);
+        }
         let target = tier.target_fps();
         if target == 0 {
             // T4: the rig draws nothing at all. Wait for a tier change rather
